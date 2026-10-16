@@ -25,16 +25,18 @@ This living document records the milestone roadmap, every major architectural an
   - Brand assets: logo, Sir Expiry mascot in multiple moods (calm/proud, worried, panicked), badges (Onion Survivor, Freezer Archaeologist), and Weekly Report card artwork.
   - Asset storage in `/public/assets` and WebP/PNG formats.
 
-- [ ] **Milestone 3: Backend API, Authentication, RBAC, and Concurrency**
+- [x] **Milestone 3: Backend API, Authentication, RBAC, and Concurrency**
   - Stateless Fastify service with TypeScript, structured JSON logging with `X-Request-Id`.
   - Secure session cookies (HTTP-only, signed), modern password hashing (scrypt/bcrypt).
   - Dev inbox (`/api/dev/inbox`) for email-free token review.
   - Multi-household membership with strict RBAC (owner, member, guest).
   - Strict household scoping enforced on every single query path.
   - Invites with expiry and revocation.
-  - Idempotent writes via `Idempotency-Key` header.
+  - Idempotent writes via `Idempotency-Key` header with replay cache.
   - Operation-based quantity deltas for concurrent updates; last-writer-wins for metadata with audit logging.
+  - Soft deletion with active item waste attribution.
   - Real-time updates via Server-Sent Events (SSE) with polling fallback.
+  - 5 comprehensive API integration tests (27 total tests passing).
 
 - [ ] **Milestone 4: Barcode Lookup, Recipe Intelligence & Offline Fallback**
   - Open Food Facts barcode lookup with caching and descriptive User-Agent.

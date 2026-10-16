@@ -55,11 +55,12 @@ This living document records the milestone roadmap, every major architectural an
   - Weekly Rescue Report generator with visual card rendering and Sir Expiry commentary.
   - 3 comprehensive integration tests (34 total tests passing).
 
-- [ ] **Milestone 6: Background Jobs, Nudges & Observability**
+- [x] **Milestone 6: Background Jobs, Nudges & Observability**
   - Database-backed distributed job lock for multi-replica execution.
   - Daily Rescue Board calculation and nudge scheduler.
   - Anti-spam rules: quiet hours by timezone (DST aware), daily cap, filtering out resolved items.
   - Health (`/health`) and metrics (`/metrics`) endpoints.
+  - 3 comprehensive integration tests (37 total tests passing).
 
 - [ ] **Milestone 7: Frontend PWA, UI/UX, Offline Sync & Dark Mode**
   - React + Vite + Tailwind CSS + Lucide Icons installable PWA.

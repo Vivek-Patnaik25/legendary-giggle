@@ -8,6 +8,8 @@ import { normaliseUnit, applyQuantityDelta } from '../../domain/units.js';
 import { estimateExpiryDate, applyFreezerExtension } from '../../domain/expiry.js';
 import { determineMascotMood, getSirExpiryStatus } from '../../domain/mascot.js';
 import { eventHub } from '../services/events.js';
+import { checkAndAwardBadges } from '../services/gamification.js';
+import { checkFreezerRediscovery } from '../../domain/expiry.js';
 
 /**
  * Strips dangerous HTML/script characters to prevent XSS while preserving emojis, RTL, and UTF-8 text
@@ -354,11 +356,16 @@ export async function pantryRoutes(fastify: FastifyInstance): Promise<void> {
       `).run(crypto.randomUUID(), id, request.user!.id, itemId, JSON.stringify({ usedQuantity: usedQty, remaining: deltaResult.newQuantity }));
     })();
 
+    const urgency = calculateUrgency({ expiryDate: item.expiry_date, quantity: item.current_quantity, isFrozen: Boolean(item.is_frozen) });
+    const { daysFrozen } = checkFreezerRediscovery(item.frozen_at);
+    const newBadges = checkAndAwardBadges(id, 'cook', { item, daysFrozen, urgencyScore: urgency.score });
+
     const updatedItem = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
     const responsePayload = {
       message: `Rescued ${usedQty} ${item.unit} of ${item.name}!`,
       item: updatedItem,
       rescuedAmount: usedQty,
+      newBadges,
     };
 
     if (idempotencyKey) {

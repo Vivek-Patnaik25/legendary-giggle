@@ -47,12 +47,13 @@ This living document records the milestone roadmap, every major architectural an
   - Unenforced item claims ("this yogurt is mine").
   - 4 comprehensive integration tests (31 total tests passing).
 
-- [ ] **Milestone 5: Gamification, Scoreboard & Weekly Rescue Report**
+- [x] **Milestone 5: Gamification, Scoreboard & Weekly Rescue Report**
   - Household pact: weekly waste targets.
   - Scoreboard tracking used vs wasted items (deleting active items counts as waste unless consumed).
-  - Badge unlock engine.
-  - Tamper-proof score audit log.
-  - Weekly Rescue Report generator with visual card rendering.
+  - Badge unlock engine (Onion Survivor, Freezer Archaeologist, Scrappy Chef, Pact Keeper, Crisper Hero).
+  - Tamper-proof score audit log and real-time badge unlock events.
+  - Weekly Rescue Report generator with visual card rendering and Sir Expiry commentary.
+  - 3 comprehensive integration tests (34 total tests passing).
 
 - [ ] **Milestone 6: Background Jobs, Nudges & Observability**
   - Database-backed distributed job lock for multi-replica execution.

@@ -11,6 +11,7 @@ import { authRoutes } from './routes/auth.js';
 import { householdRoutes, inviteRoutes } from './routes/households.js';
 import { pantryRoutes } from './routes/pantry.js';
 import { recipeRoutes, barcodeRoutes } from './routes/recipes.js';
+import { scoreboardRoutes } from './routes/scoreboard.js';
 
 export interface BuildAppOptions {
   dbPath?: string;
@@ -101,6 +102,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   app.register(inviteRoutes, { prefix: '/api/invites' });
   app.register(pantryRoutes, { prefix: '/api/households' });
   app.register(recipeRoutes, { prefix: '/api/households' });
+  app.register(scoreboardRoutes, { prefix: '/api/households' });
   app.register(barcodeRoutes, { prefix: '/api/lookup' });
 
   // Centralized Error Handler

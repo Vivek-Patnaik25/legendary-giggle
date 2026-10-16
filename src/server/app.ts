@@ -58,6 +58,24 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     });
   }
 
+  // Serve compiled production frontend if dist directory exists
+  const distDir = path.resolve(process.cwd(), 'dist');
+  if (fs.existsSync(distDir)) {
+    app.register(fastifyStatic, {
+      root: distDir,
+      prefix: '/',
+      decorateReply: false,
+    });
+
+    app.setNotFoundHandler((request, reply) => {
+      if (request.url.startsWith('/api/')) {
+        reply.status(404).send({ error: 'NOT_FOUND', message: 'API route not found' });
+      } else {
+        reply.sendFile('index.html', distDir);
+      }
+    });
+  }
+
   // Health Endpoint
   app.get('/health', async (_req: FastifyRequest, reply: FastifyReply) => {
     const db = getDb(options.dbPath);

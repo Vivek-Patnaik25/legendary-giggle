@@ -62,12 +62,13 @@ This living document records the milestone roadmap, every major architectural an
   - Health (`/health`) and metrics (`/metrics`) endpoints.
   - 3 comprehensive integration tests (37 total tests passing).
 
-- [ ] **Milestone 7: Frontend PWA, UI/UX, Offline Sync & Dark Mode**
+- [x] **Milestone 7: Frontend PWA, UI/UX, Offline Sync & Dark Mode**
   - React + Vite + Tailwind CSS + Lucide Icons installable PWA.
-  - Offline-first IndexedDB storage and background sync queue.
+  - Offline-first IndexedDB storage and background sync queue with conflict resolution.
   - Responsive, keyboard-accessible, screen-reader-labelled, dark mode by default.
   - Onboarding with Sir Expiry (no blank screens).
-  - Full core loop UI: Rescue Board, Quick Add, Cook/Discard modals, Recipes, Scoreboard, Settings.
+  - Full core loop UI: Rescue Board, Quick Add, Cook/Discard modals, Recipes, Scoreboard, Settings, and Dev Inbox.
+  - Production build compiled with zero errors.
 
 - [ ] **Milestone 8: Multi-Replica Stack, Load Balancer & E2E Verification**
   - Reverse proxy / load balancer with health checks routing across 2+ API replicas.

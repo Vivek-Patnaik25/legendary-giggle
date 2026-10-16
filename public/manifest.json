@@ -1,0 +1,17 @@
+{
+  "name": "Pantry Rescue",
+  "short_name": "PantryRescue",
+  "description": "Shared household fridge and pantry tracker that turns food about to expire into dinner ideas.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/assets/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -38,13 +38,14 @@ This living document records the milestone roadmap, every major architectural an
   - Real-time updates via Server-Sent Events (SSE) with polling fallback.
   - 5 comprehensive API integration tests (27 total tests passing).
 
-- [ ] **Milestone 4: Barcode Lookup, Recipe Intelligence & Offline Fallback**
+- [x] **Milestone 4: Barcode Lookup, Recipe Intelligence & Offline Fallback**
   - Open Food Facts barcode lookup with caching and descriptive User-Agent.
   - TheMealDB recipe search integration + robust bundled offline recipe dataset.
   - Recipe ranking algorithm (at-risk items prioritized, missing ingredients count and list).
   - Smart shopping hints engine (1-2 missing items, excluding current inventory).
   - Leftovers as first-class items.
   - Unenforced item claims ("this yogurt is mine").
+  - 4 comprehensive integration tests (31 total tests passing).
 
 - [ ] **Milestone 5: Gamification, Scoreboard & Weekly Rescue Report**
   - Household pact: weekly waste targets.

@@ -10,6 +10,7 @@ import { getDb } from './db/index.js';
 import { authRoutes } from './routes/auth.js';
 import { householdRoutes, inviteRoutes } from './routes/households.js';
 import { pantryRoutes } from './routes/pantry.js';
+import { recipeRoutes, barcodeRoutes } from './routes/recipes.js';
 
 export interface BuildAppOptions {
   dbPath?: string;
@@ -99,6 +100,8 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   app.register(householdRoutes, { prefix: '/api/households' });
   app.register(inviteRoutes, { prefix: '/api/invites' });
   app.register(pantryRoutes, { prefix: '/api/households' });
+  app.register(recipeRoutes, { prefix: '/api/households' });
+  app.register(barcodeRoutes, { prefix: '/api/lookup' });
 
   // Centralized Error Handler
   app.setErrorHandler((error: any, request: FastifyRequest, reply: FastifyReply) => {

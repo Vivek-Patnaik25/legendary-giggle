@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Load Balancer / Reverse Proxy (Port 3000)
+  load-balancer:
+    image: nginx:alpine
+    container_name: pantry-load-balancer
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - pantry-api-1
+      - pantry-api-2
+    restart: unless-stopped
+
+  # API Replica 1 (Port 3001)
+  pantry-api-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pantry-api-1
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=sqlite:///data/pantry.db
+      - SESSION_SECRET=pantry-rescue-super-secure-container-session-secret-12345
+    volumes:
+      - pantry-data:/data
+    restart: unless-stopped
+
+  # API Replica 2 (Port 3002)
+  pantry-api-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pantry-api-2
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - DATABASE_URL=sqlite:///data/pantry.db
+      - SESSION_SECRET=pantry-rescue-super-secure-container-session-secret-12345
+    volumes:
+      - pantry-data:/data
+    restart: unless-stopped
+
+volumes:
+  pantry-data:
+    driver: local

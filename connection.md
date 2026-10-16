@@ -152,3 +152,57 @@ This living document describes how all components of Pantry Rescue fit together:
 | `barcode:<code` | SQLite `cache_entries` | 86,400s (24 hours) | Automatic TTL expiry; manual refresh if product data updated. |
 | `recipes:search:<query>` | SQLite `cache_entries` | 86,400s (24 hours) | Daily background refresh or on demand. |
 | `household:rescue:<id>` | In-memory / short DB cache | 300s (5 minutes) | Invalidated immediately on any item addition, delta, or deletion. |
+
+---
+
+## 7. Multi-Replica Cluster & Reverse Proxy Setup
+
+Pantry Rescue is designed to run locally with zero cloud dependencies while mirroring enterprise multi-replica production:
+
+1. **Local Node Cluster (`src/server/cluster.ts`):**
+   - Reverse proxy listening on port 3000.
+   - Spawns two child API replica instances on port 3001 (`replica-1`) and 3002 (`replica-2`).
+   - Polls `/health` on all replicas every 2,000ms.
+   - Routes incoming requests using round-robin distribution across healthy replicas.
+   - Injects `X-Served-By` (`replica-1`, `replica-2`) and ensures `X-Request-Id` is propagated on all downstream responses.
+   - Performs graceful shutdown on `SIGINT` / `SIGTERM`, draining in-flight requests and terminating child processes cleanly.
+
+2. **Docker Multi-Container Deployment (`docker-compose.yml` & `nginx.conf`):**
+   - Nginx reverse proxy listening on port 3000 as `pantry-load-balancer`.
+   - Replicas `pantry-api-1` and `pantry-api-2` running production Alpine Node images.
+   - Shared persistent volume `pantry-data` mounted at `/data` for SQLite WAL database.
+   - Full SSE support enabled via Nginx (`proxy_buffering off; chunked_transfer_encoding off;`).
+
+---
+
+## 8. Client Offline Sync & Conflict Resolution
+
+```
+[User Action in Offline Mode]
+             |
+             v
+[Write to Local IndexedDB ('pending_mutations')]
+             |
+             v
+[Optimistic Local UI Update]
+             |
+             v
+[Online Event Detected (window 'online' / periodic heartbeat)]
+             |
+             v
+[Process FIFO Mutation Queue]
+             |
+             +---> Send POST/PUT with 'Idempotency-Key'
+             |          |
+             |          +---> (200/201 OK) ---> Remove from queue & apply server state
+             |          |
+             |          +---> (403 Forbidden: Revoked) ---> Wipe local household cache & prompt re-login
+             |          |
+             |          +---> (410 Gone: Household Deleted) ---> Drop household items & notify user
+             |          |
+             |          +---> (Network Failure) ---> Exponential backoff & keep in queue
+             |
+             v
+[Household In-Sync with Backend]
+```
+

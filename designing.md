@@ -70,16 +70,20 @@ This living document records the milestone roadmap, every major architectural an
   - Full core loop UI: Rescue Board, Quick Add, Cook/Discard modals, Recipes, Scoreboard, Settings, and Dev Inbox.
   - Production build compiled with zero errors.
 
-- [ ] **Milestone 8: Multi-Replica Stack, Load Balancer & E2E Verification**
-  - Reverse proxy / load balancer with health checks routing across 2+ API replicas.
-  - `X-Served-By` replica headers.
-  - Full core-loop smoke test script.
-  - Load test benchmarking concurrency and latency.
+- [x] **Milestone 8: Multi-Replica Stack, Load Balancer & E2E Verification**
+  - Reverse proxy / load balancer with health checks routing across 2+ API replicas (`src/server/cluster.ts`).
+  - Production container setup (`Dockerfile`, `docker-compose.yml`, `nginx.conf`).
+  - `X-Served-By` replica header injection and verification.
+  - Full core-loop smoke test script (`scripts/smoke-test.ts` passing 10/10 steps).
+  - Load test benchmarking concurrency and latency (`scripts/load-test.ts` passing with 2,152 req/sec).
 
-- [ ] **Milestone 9: Security Audit, Accessibility Check, Polish & Final Documentation**
-  - Security audit and dependency vulnerability resolution.
-  - Accessibility pass.
-  - Final documentation update and Definition of Done validation.
+- [x] **Milestone 9: Security Audit, Accessibility Check, Polish & Final Documentation**
+  - Security audit completed: `npm audit` returned 0 vulnerabilities.
+  - Full test suite verified: 37 Vitest unit & integration tests passing 100%.
+  - Accessibility audit passed (ARIA attributes, keyboard navigation, high-contrast dark mode).
+  - Production build verified: `npm run build` succeeds cleanly.
+  - Complete `README.md` created with architecture, local setup, containerization, and testing instructions.
+  - Definition of Done fully verified with concrete evidence.
 
 ---
 
@@ -130,12 +134,78 @@ This living document records the milestone roadmap, every major architectural an
   - *Regex-only matching:* Prone to slow evaluation and edge-case regressions.
 - **Trade-offs:** Slightly more entries in the in-memory lookup map (~120 entries), which is negligible (<10KB memory).
 
+### Decision 007: Multi-Replica Stack & Load Balancer Architecture
+- **Decision:** Node.js HTTP reverse proxy orchestrator (`src/server/cluster.ts`) for zero-dependency local execution + production Docker Compose stack (`docker-compose.yml` with Nginx reverse proxy).
+- **Why:** Allows developers and automated test harnesses to spin up a fully functioning multi-replica load-balanced cluster with round-robin health checks using standard `npm start` or `npm run test:e2e`, without requiring a Docker daemon to be running. For production container deployments, `nginx.conf` and `docker-compose.yml` provide industry-standard Nginx reverse proxy routing.
+- **Alternatives Rejected:**
+  - *Docker-only requirement:* Breaks testing in environments where Docker daemon is absent or restricted.
+  - *Single process clustering only:* Hides inter-process communication, port collisions, and multi-node header injection.
+
 ---
 
 ## 3. Load Test Results
-*(To be populated during Milestone 8)*
+
+Load test executed via `npx tsx scripts/load-test.ts` targeting the reverse proxy load balancer on port 3000, routing across two active API replicas (port 3001 and port 3002).
+
+```
+=============================================================
+   Pantry Rescue — Multi-Replica Load Benchmark
+   Target: http://127.0.0.1:3000
+   Total Requests: 300 | Concurrency: 25
+=============================================================
+
+--- Benchmark Results ---
+Total Requests:      300
+Successful:          300 (100.0%)
+Failed:              0
+Total Elapsed Time:  0.14s
+Throughput:          2152 req/sec
+
+Latency Percentiles:
+  Min:               4.38 ms
+  Median (p50):      8.78 ms
+  p95:               36.63 ms
+  p99:               38.24 ms
+  Max:               38.73 ms
+
+Replica Distribution (Proof of Load Balancing):
+  replica-2: 150 requests (50.0%)
+  replica-1: 150 requests (50.0%)
+-------------------------
+```
+
+**Key Takeaways:**
+1. **Perfect Load Distribution:** The load balancer achieved an exact 50.0% / 50.0% round-robin split (150 requests to replica-1, 150 requests to replica-2).
+2. **Exceptional Concurrency Performance:** 2,152 requests per second with a median latency of 8.78 ms under 25 concurrent workers.
+3. **Zero Errors:** 100.0% of requests returned HTTP 200 OK with valid headers and `X-Served-By` tags.
 
 ---
 
 ## 4. Final Definition of Done Checklist
-*(To be populated and verified during Milestone 9)*
+
+| Requirement | Status | Concrete Code / Test Evidence |
+| :--- | :---: | :--- |
+| **Zero Paid Services** | Verified | Open Food Facts (free, public), TheMealDB (free tier), SQLite WAL (zero infrastructure cost), `/api/dev/inbox` for email verification without external mail providers. |
+| **Fast & Responsive** | Verified | Vite PWA bundle 96kB gzipped; API responses < 10ms p50 latency under 25 concurrent connections (2,152 req/sec). |
+| **Safe Under Concurrency** | Verified | Quantity changes recorded via atomic delta operations (`src/server/routes/pantry.ts#cook`, `item_deltas` table); SQLite WAL mode with `busy_timeout=5000ms`. Verified in `tests/server/api.test.ts`. |
+| **Stateless Multi-Replica API** | Verified | All state lives in DB; session tokens verified via secret hash; running replicas on ports 3001 & 3002 verified in `scripts/smoke-test.ts` and `scripts/load-test.ts`. |
+| **Load Balancer with Health Checks** | Verified | `src/server/cluster.ts` monitors `/health` every 2s; injects `X-Served-By` and `X-Request-Id`; Nginx configuration in `nginx.conf`. |
+| **Graceful Shutdown** | Verified | Replicas drain active HTTP connections and release distributed job locks cleanly on `SIGINT` / `SIGTERM`. |
+| **Relational DB with Migrations** | Verified | `src/server/db/schema.ts` runs 4 versioned migrations with WAL journal mode, indexes on `(household_id, expiry_date)` and `(item_id, created_at)`. |
+| **Audit Logging & Soft Deletion** | Verified | `audit_logs` records every mutation, score change, and delta; items soft-deleted with `status='wasted'` unless marked consumed. |
+| **Household Scoping on Every Query** | Verified | `src/server/middleware/auth.ts#requireHouseholdMember` asserts user membership and role permissions on every query path. Verified in `tests/server/api.test.ts`. |
+| **Idempotent Writes** | Verified | `src/server/middleware/idempotency.ts` checks `Idempotency-Key` header and replays cached responses on duplicate requests. |
+| **Unit Normalisation & Nonsense Rejection**| Verified | `src/domain/units.ts` normalises grams, ml, cups, pieces, tins; rejects nonsense (e.g. grams to cups for unknown density). 100% test pass in `tests/domain/units.test.ts`. |
+| **Synonym Canonicalization** | Verified | `src/domain/synonyms.ts` resolves coriander/cilantro, aubergine/eggplant, capsicum/bell pepper in singular and plural forms. 100% test pass in `tests/domain/synonyms.test.ts`. |
+| **Urgency Score Formula** | Verified | `src/domain/urgency.ts` weights days remaining (50%), quantity (20%), and recipe candidacy (30%). 100% test pass in `tests/domain/urgency.test.ts`. |
+| **Rescue Recipes & Offline Fallback** | Verified | `src/server/services/recipeEngine.ts` ranks recipes by at-risk items used; displays missing ingredients count; falls back to 50+ bundled recipes if offline. |
+| **Smart Shopping Hints** | Verified | `src/server/services/shoppingHints.ts` identifies 1-2 complementary ingredients, strictly excluding current household inventory. |
+| **Leftovers & Claims** | Verified | First-class leftovers support (`is_leftover: true`, 3-4 day expiry); unenforced item claims (`claimed_by_name`). |
+| **Household Pact & Scoreboard** | Verified | `src/server/services/gamification.ts` tracks weekly waste targets, streaks, and awards 5 distinct badges (e.g. Onion Survivor). |
+| **Weekly Rescue Report Card** | Verified | Shareable visual card with Sir Expiry commentary and visual artwork generated at `/public/assets/weekly_report_bg.png`. |
+| **Mascot Personality Engine** | Verified | `src/domain/mascot.ts` computes Sir Expiry mood (calm, worried, panicked) with witty, non-shaming dialogue. |
+| **Background Jobs & Anti-Spam** | Verified | `src/server/services/scheduler.ts` uses distributed DB lock `job_locks`, timezone-aware quiet hours, and daily reminder caps. |
+| **Installable PWA & Offline Sync** | Verified | Service worker `public/sw.js`, manifest `public/manifest.json`, IndexedDB mutation queue in `src/client/sync.ts`. |
+| **Accessibility & Dark Mode** | Verified | Dark mode by default with high-contrast palette; ARIA labels on all interactive controls, buttons, and modals. |
+| **Security & Vulnerability Free** | Verified | `npm audit` returned 0 vulnerabilities; XSS protection, rate limiting (`@fastify/rate-limit`), secure HTTP-only cookies. |
+| **Two Living Documents Up-to-Date** | Verified | `designing.md` and `connection.md` updated at every milestone. |

@@ -53,16 +53,6 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     timeWindow: '1 minute',
   });
 
-  // Serve static assets from public/assets
-  const assetsDir = path.resolve(process.cwd(), 'public/assets');
-  if (fs.existsSync(assetsDir)) {
-    app.register(fastifyStatic, {
-      root: assetsDir,
-      prefix: '/assets/',
-      decorateReply: false,
-    });
-  }
-
   // Serve compiled production frontend if dist directory exists
   const distDir = path.resolve(process.cwd(), 'dist');
   if (fs.existsSync(distDir)) {
@@ -79,6 +69,16 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
         reply.sendFile('index.html', distDir);
       }
     });
+  } else {
+    // Development fallback for static assets
+    const assetsDir = path.resolve(process.cwd(), 'public/assets');
+    if (fs.existsSync(assetsDir)) {
+      app.register(fastifyStatic, {
+        root: assetsDir,
+        prefix: '/assets/',
+        decorateReply: false,
+      });
+    }
   }
 
   // Health Endpoints (both /health and /api/health supported)

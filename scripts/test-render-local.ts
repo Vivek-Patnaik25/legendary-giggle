@@ -79,6 +79,15 @@ async function main() {
     throw new Error('Root SPA serving failed');
   }
 
+  // 3.5. Test /assets/ bundle serving from dist/assets
+  console.log('\n--- 3.5. Testing /assets/ serving from dist/assets ---');
+  const assetRes = await get(`http://127.0.0.1:${testPort}/assets/index-DdCNFAsh.js`);
+  console.log(`Status: ${assetRes.statusCode}`);
+  if (assetRes.statusCode !== 200) {
+    throw new Error(`/assets/ bundle serving failed with status ${assetRes.statusCode}`);
+  }
+  console.log('Passed: Static JS bundle served successfully from dist/assets');
+
   // 4. Test Graceful Shutdown via SIGTERM
   console.log('\n--- 4. Testing SIGTERM Graceful Shutdown ---');
   const exitPromise = new Promise<{ code: number | null; signal: string | null }>((resolve) => {

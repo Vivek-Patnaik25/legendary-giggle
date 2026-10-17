@@ -169,7 +169,95 @@ This living document records the milestone roadmap, every major architectural an
 
 ---
 
-## 3. Load Test Results & Known Gaps
+## 3. Design Decisions (UI/UX Craft Redesign)
+
+This section documents the foundational design philosophy, craft inspirations, spatial system, typography scale, unified vocabulary, and addictive loop mechanics driving the complete UI redesign of Pantry Rescue.
+
+### 3.1 Craft References: What Was Taken vs. What Was Deliberately Rejected
+
+| Reference | What Was Studied & Adopted | What Was Deliberately Rejected |
+| :--- | :--- | :--- |
+| **Linear** | **Spatial discipline & speed:** Strict 4px/8px layout rhythm, instantaneous optimistic interactions (<50ms feedback), high information density without visual noise. | **Cold developer aesthetic:** Dark-only neon biases, dense monospace tables, and keyboard-command-pallet overcomplexity unsuited for single-handed kitchen usage. |
+| **Things 3** | **Calm, tactile completion:** Generous whitespace, peaceful contrast, soft checkbox feedback, satisfying tactile feeling when completing a rescue. | **Sterile flat-white minimalism:** Lack of food-warmth or emotional mascot resonance; lack of urgency visualization. |
+| **Duolingo** | **Habit psychology & real streaks:** Explicit milestone progress bars, celebration of real user agency (explicit item rescues), transparent badge unlock conditions. | **Loud gamification slop:** Aggressive nagging notifications, cartoon clutter, infantilizing sound effects, and rewarding inactive weeks. |
+| **Notion Calendar** | **Temporal clarity & hierarchy:** Clean chronological grouping of expiring items, smooth transition from compact mobile view to structured desktop navigation. | **Monotonous grayscale:** Clinical spreadsheet tone that lacks appetite appeal or kitchen delight. |
+| **Stripe Editorial** | **Typographic craftsmanship:** High-contrast editorial display headlines paired with razor-sharp legible sans body copy, intentional typesetting. | **Heavy marketing splashes:** Multi-layered gradient ribbons, scroll-jacking animations, and decorative marketing fluff unsuitable for utility tools. |
+| **Awwwards / Mobbin** | **Warm tactile paper textures:** Off-white natural backgrounds resembling pantry paper labels, thumb-driven bottom tab bar (375px native ergonomics), purposeful state-change motion. | **AI slop patterns:** Neon glow dropshadows, glassmorphic blurred panels, gradient borders, emoji icons, and generic card grids. |
+
+### 3.2 Palette & Color System: Paper & Pantry Jars
+
+The color system abandons generic dark-navy/neon dashboards in favor of a warm, culinary-inspired palette grounded in physical paper, glass jars, and fresh ingredients:
+
+- **Light Palette (Default / Primary):**
+  - **Canvas Base:** `#FAF7F2` (Warm linen paper).
+  - **Surface & Cards:** `#FFFFFF` (Crisp ceramic white with subtle `#EFE9DF` hairline borders).
+  - **Text Ink:** `#1C1917` (Deep stone ink for effortless reading under kitchen lighting).
+  - **Muted Text:** `#78716C` (Warm graphite for metadata, units, and timestamps).
+  - **Urgency Accent (The Tomato / Terracotta):**
+    - High Urgency (0–2 days left): `#D9483B` (Warm ripe tomato).
+    - Moderate Urgency (3–5 days left): `#E07A5F` (Warm apricot/squash).
+    - Fresh / Safe (6+ days left): `#4A7C59` (Fresh sage green).
+- **Dark Palette (Purpose-Designed, Not an Inversion):**
+  - **Canvas Base:** `#161513` (Deep espresso / roasted walnut).
+  - **Surface & Cards:** `#211F1C` (Warm charcoal surface with `#33302B` borders).
+  - **Text Ink:** `#EDE8E0` (Soft warm cream) and `#A8A29E` (Muted parchment).
+  - **Urgency Accent:** `#E55342` (Luminescent terracotta, maintaining WCAG AA contrast against dark charcoal).
+
+### 3.3 Typography & Strict Type Scale
+
+Two distinct typefaces provide character and legibility:
+- **Display Headings & Numerals:** **Fraunces** — a soft, characterful serif with warm warmth, optical size adjustments, and human craft.
+- **UI & Body Copy:** **Plus Jakarta Sans** — an ultra-clean geometric sans-serif engineered for digital interfaces and fast recognition at 12–15px.
+
+| Scale Token | Font Size / Line Height | Font Family | Usage |
+| :--- | :--- | :--- | :--- |
+| `display-hero` | 32px / 1.15 | Fraunces (SemiBold) | Mascot quotes, weekly report card rescue stats |
+| `heading-1` | 24px / 1.25 | Fraunces (SemiBold) | Tab titles (Today, Fridge, Wins) |
+| `heading-2` | 18px / 1.30 | Fraunces (Medium) | Item names, recipe titles |
+| `body-base` | 14px / 1.50 | Plus Jakarta Sans (Regular) | Instructions, descriptions, ingredient rows |
+| `body-medium` | 14px / 1.50 | Plus Jakarta Sans (Medium) | Navigation labels, button text |
+| `caption-sm` | 12px / 1.40 | Plus Jakarta Sans (Regular/Medium) | Freshness bar labels, category tags, timestamps |
+
+### 3.4 Unified Vocabulary & Usability Invariants
+
+To eliminate confusion across all user touchpoints, the entire product adheres strictly to one unified vocabulary:
+1. **"Fridge"**: Replaces "Provisions", "Pantry staples", "Inventory", and "Items list".
+2. **"Expiring soon"**: Replaces "At-risk provisions", "Urgent items", "Critical danger".
+3. **"Use"**: Replaces "Consume", "Eat", "Decrement", "Active deletion".
+4. **"Cook"**: Dedicated exclusively to preparing and completing a rescue recipe.
+5. **Single Freshness Bar**: Replaces dual urgency numbers (score + days). Every item displays a single progressive freshness indicator bar with a clear human label ("2 days left", "Today"). Tapping once reveals an accessible explanation tooltip.
+6. **One Primary Action per View**: Screen clutter is eliminated; each view features a single primary action (e.g. Floating "+ Add item" on mobile).
+7. **Accessible Modals**: Every modal renders with a full-viewport backdrop (`fixed inset-0 bg-stone-900/60`), traps keyboard focus inside the dialog, supports Escape key dismissal, and locks body scrolling.
+8. **Double-Escape & Pluralisation Fixes**: HTML entities are rendered as clean literal text (no `&amp;`), and plural forms are strictly evaluated (`1 week` vs `2 weeks`, `1 item` vs `3 items`).
+
+### 3.5 Mascot Philosophy (Sir Expiry)
+
+Sir Expiry is preserved as the dramatic soul of the product, but with strict restraint:
+- **Usage Capped at Exactly 3 Touchpoints:**
+  1. *Empty States:* Guiding the user gently when no items or activities exist.
+  2. *Today Screen Header:* Reacting theatrically to the highest urgency item currently in the house.
+  3. *Weekly Rescue Report Card:* Delivering the household's official waste reduction verdict.
+- **Rendering:** High-resolution transparent PNGs only. No background color clipping or card clutter.
+
+### 3.6 Guest-First Trial Flow (Instant Onboarding < 60s)
+
+To ensure any user can experience value in under 60 seconds without barriers:
+- On cold open, the app initializes an instant guest household in localStorage / session.
+- The user lands directly on **Today** with a single prompt: *"Add an item about to expire"*.
+- No registration form, email verification, or password entry is required to add items, view rescue recipes, or cook dinner.
+- An account creation prompt is surfaced ONLY when the user chooses to *"Invite household members"* or *"Sync across devices"*.
+
+### 3.7 Addiction Loop & Local Analytics
+
+Real behavioral change requires real rewards for real agency:
+- **"Today" Action Screen:** Top 3 expiring items surfaced with a single tactile "Use" action.
+- **Instant Tactile Feedback:** Tapping "Use" decrements quantity with a smooth <400ms transition and displays a fleeting, skippable Sir Expiry quip.
+- **Honest Streaks & Badges:** Streaks increment only when items are actively rescued. Inactive weeks show an encouraging "Start a rescue" state rather than empty praise. Badges feature explicit fractional progress bars (e.g. "3 of 5 rescues to unlock Onion Survivor").
+- **Local Event Table (`analytics_events`):** Stores event logs (`first_item_added`, `first_cook`, `day_1_return`, `items_used_per_week`, `wasted_items_per_week`) locally with zero third-party trackers or telemetry overhead.
+
+---
+
+## 4. Load Test Results & Known Gaps
 
 ### Concurrency Benchmark
 Load test executed via `npx tsx scripts/load-test.ts` targeting the reverse proxy load balancer on port 3000, routing across two active API replicas (port 3001 and port 3002).
@@ -233,7 +321,7 @@ Request #4:
 
 ---
 
-## 4. Final Definition of Done Checklist
+## 5. Final Definition of Done Checklist
 
 | Requirement | Status | Concrete Command / Test Proof |
 | :--- | :---: | :--- |

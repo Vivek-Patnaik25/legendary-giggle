@@ -112,14 +112,22 @@ cp .env.example .env
 
 ### Running Locally
 
-#### 1. Multi-Replica Stack with Load Balancer (Recommended)
+#### 1. Single-Instance Production Mode (Render Equivalent)
+Builds the client SPA into `dist/` and runs the compiled Fastify server with pure Node (no dev tools):
+```bash
+npm run build
+npm start
+```
+Open [http://localhost:3001](http://localhost:3001) in your browser.
+
+#### 2. Local Multi-Replica Stack with Load Balancer
 Spawns the reverse proxy load balancer on port 3000 and two API replicas on ports 3001 and 3002:
 ```bash
-npm start
+npm run start:cluster
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-#### 2. Single Replica Development Mode
+#### 3. Single Replica Development Mode (with HMR)
 ```bash
 # Terminal 1: Fastify Backend
 npm run dev
@@ -128,17 +136,28 @@ npm run dev
 npm run dev:client
 ```
 
-#### 3. Docker Multi-Container Stack
-```bash
-docker-compose up --build
-```
+---
+
+## ☁️ Deploying to Render
+
+Pantry Rescue is configured for zero-hassle deployment as a unified Web Service on Render with a persistent disk.
+
+Full step-by-step instructions for non-experts are in [DEPLOY.md](file:///s:/AutoProj/Proj1/DEPLOY.md).
+
+> [!WARNING]
+> **Session Secret Configuration:**
+> Never commit a production `SESSION_SECRET` to git. When configuring your service in the Render Dashboard, set:
+> ```
+> SESSION_SECRET=REPLACE_WITH_A_SECURE_RANDOM_32_CHARACTER_STRING
+> ```
+> *(Or use the Blueprint deploy in `render.yaml` which automatically runs `generateValue: true` on Render)*.
 
 ---
 
 ## 🧪 Testing & Validation
 
 ```bash
-# 1. Run Unit & Integration Test Suite (Vitest)
+# 1. Run Unit & Integration Test Suite (Vitest - 41 tests)
 npm test
 
 # 2. Run End-to-End Core Loop Smoke Test (against Load Balancer)
@@ -147,11 +166,14 @@ npm run test:e2e
 # 3. Run Concurrency Load Test Benchmark
 npm run test:load
 
-# 4. Verify Production Build & TypeScript Typechecks
+# 4. Verify Production Build (Client SPA & Server)
 npm run build
 
 # 5. Security & Dependency Audit
 npm audit
+
+# 6. Run Live Deployment Smoke Test (against any running URL)
+./scripts/smoke-live.sh https://your-service.onrender.com
 ```
 
 ---
@@ -195,5 +217,7 @@ npm audit
 
 ## 📄 Documentation
 
+- [DEPLOY.md](file:///s:/AutoProj/Proj1/DEPLOY.md): Step-by-step production deployment guide for Render.
+- [deployment-audit.md](file:///s:/AutoProj/Proj1/docs/deployment-audit.md): Deep-dive audit on single-process vs multi-instance assumptions and scalability blockers.
 - [designing.md](file:///s:/AutoProj/Proj1/designing.md): Full architectural decision records, trade-offs, and Definition of Done validation.
 - [connection.md](file:///s:/AutoProj/Proj1/connection.md): Detailed component map, data flow pipelines, caching rules, and state machines.

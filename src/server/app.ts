@@ -12,6 +12,7 @@ import { householdRoutes, inviteRoutes } from './routes/households.js';
 import { pantryRoutes } from './routes/pantry.js';
 import { recipeRoutes, barcodeRoutes } from './routes/recipes.js';
 import { scoreboardRoutes } from './routes/scoreboard.js';
+import { analyticsRoutes } from './routes/analytics.js';
 
 export interface BuildAppOptions {
   dbPath?: string;
@@ -130,6 +131,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   app.register(recipeRoutes, { prefix: '/api/households' });
   app.register(scoreboardRoutes, { prefix: '/api/households' });
   app.register(barcodeRoutes, { prefix: '/api/lookup' });
+  app.register(analyticsRoutes, { prefix: '/api/analytics' });
 
   // Direct alias for dev inbox at /api/dev/inbox
   app.get('/api/dev/inbox', async (_request, reply) => {

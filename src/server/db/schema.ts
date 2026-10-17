@@ -226,4 +226,31 @@ export function runMigrations(db: Database.Database): void {
       db.prepare("INSERT INTO schema_migrations (version, name) VALUES (1, 'initial_schema')").run();
     })();
   }
+
+  // Migration 002: Analytics event tracking & guest accounts
+  if (!appliedVersions.has(2)) {
+    db.transaction(() => {
+      // Add is_guest column if not exists
+      try {
+        db.exec("ALTER TABLE users ADD COLUMN is_guest INTEGER DEFAULT 0;");
+      } catch {
+        // column may already exist
+      }
+
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS analytics_events (
+          id TEXT PRIMARY KEY,
+          household_id TEXT,
+          user_id TEXT,
+          event_type TEXT NOT NULL,
+          event_data TEXT DEFAULT '{}',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_analytics_type ON analytics_events(event_type);
+        CREATE INDEX IF NOT EXISTS idx_analytics_hh ON analytics_events(household_id);
+      `);
+
+      db.prepare("INSERT INTO schema_migrations (version, name) VALUES (2, 'analytics_and_guest_accounts')").run();
+    })();
+  }
 }

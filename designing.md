@@ -159,6 +159,14 @@ This living document records the milestone roadmap, every major architectural an
   - *MongoDB Rejected:* Pantry Rescue requires relational data integrity: foreign keys (`household_id`, `user_id`), atomic delta operations (`item_deltas`) to eliminate lost-update concurrency races, versioned SQL migrations (`schema_migrations`), and audit logging. Rewriting to MongoDB would forfeit transactional safety and require discarding all 41 validated unit and integration tests.
   - *Free Cloud Persistence Recommendation:* For households wanting $0 permanent persistence across Render free-tier spin-downs, the recommended path is **Turso (libSQL)** — which provides 9 GB free cloud SQLite using identical SQL syntax — or **Supabase / Neon (Serverless PostgreSQL)**.
 
+### Decision 011: Automated Native Module Rebuild across Node Version Transitions
+- **Decision:** Embed `npm rebuild better-sqlite3` directly into the `build` script in `package.json` (`npm rebuild better-sqlite3 && npm run build:client && npm run build:server`).
+- **Why:** Diagnosed via Render CLI logs (`render logs --resources srv-db9nfccs728c73cbabt0`). When switching Node from 24 to 22 LTS, Render's cached build artifacts retained the Node 24 native binary (`NODE_MODULE_VERSION 137`), causing `ERR_DLOPEN_FAILED` under Node 22 (`NODE_MODULE_VERSION 127`). Ensuring `npm rebuild better-sqlite3` runs on every build guarantees native bindings always match the exact active Node runtime regardless of build cache state.
+
+### Decision 012: Priority Single-Root Static Asset Routing
+- **Decision:** In `src/server/app.ts`, register `dist/` as the single static root prefix when present, serving Vite-compiled JS, CSS, and copied images from `dist/assets/`, falling back to `public/assets` only when `dist/` is absent.
+- **Why:** Avoids prefix route shadowing between `public/assets/` and `dist/assets/`, ensuring Vite's hashed bundles (`/assets/index-*.js`, `/assets/index-*.css`) are served with HTTP 200 rather than throwing a 500 file-not-found error.
+
 ---
 
 ## 3. Load Test Results & Known Gaps

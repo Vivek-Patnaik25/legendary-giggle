@@ -123,6 +123,13 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   app.register(scoreboardRoutes, { prefix: '/api/households' });
   app.register(barcodeRoutes, { prefix: '/api/lookup' });
 
+  // Direct alias for dev inbox at /api/dev/inbox
+  app.get('/api/dev/inbox', async (_request, reply) => {
+    const db = getDb(options.dbPath);
+    const messages = db.prepare('SELECT * FROM dev_inbox ORDER BY created_at DESC LIMIT 50').all();
+    return reply.send({ messages });
+  });
+
   // Centralized Error Handler
   app.setErrorHandler((error: any, request: FastifyRequest, reply: FastifyReply) => {
     const statusCode = error.statusCode || 500;

@@ -50,10 +50,11 @@ This living document describes how all components of Pantry Rescue fit together:
 | `src/server/index.ts` | Server bootstrap, plugin registration, multi-replica binding, graceful shutdown. |
 | `src/server/routes/auth.ts` | User registration, password hashing (scrypt/bcrypt), cookie sessions, dev inbox. |
 | `src/server/routes/households.ts`| Household creation, membership management, RBAC enforcement, invites. |
-| `src/server/routes/pantry.ts` | Item CRUD, delta-based quantity updates, urgency sorting, claims. |
+| `src/server/routes/pantry.ts` | Item CRUD, delta-based quantity updates, urgency sorting, claims, and SSE real-time stream (`/:id/events`). |
 | `src/server/routes/recipes.ts` | Recipe suggestions, ingredient matching, missing ingredients calculation. |
 | `src/server/routes/scoreboard.ts`| Waste/rescue logging, streak calculations, badge awards, audit logs. |
-| `src/server/routes/events.ts` | Server-Sent Events (SSE) stream for real-time household updates & polling fallback. |
+| `src/server/services/events.ts` | In-memory pub/sub EventHub broadcasting item mutations, score changes, and polling fallback. |
+| `src/server/utils/sanitize.ts` | HTML sanitization for XSS prevention preserving UTF-8, RTL, and emojis. |
 | `src/server/services/barcode.ts`| Open Food Facts lookup, cache manager, offline product fallback. |
 | `src/server/services/recipeEngine.ts` | TheMealDB search, offline recipes fallback, urgency-weighted ranking. |
 | `src/server/services/scheduler.ts`| Distributed background job runner, daily Rescue Board, nudge dispatch. |

@@ -11,19 +11,7 @@ import { eventHub } from '../services/events.js';
 import { checkAndAwardBadges } from '../services/gamification.js';
 import { checkFreezerRediscovery } from '../../domain/expiry.js';
 
-/**
- * Strips dangerous HTML/script characters to prevent XSS while preserving emojis, RTL, and UTF-8 text
- */
-function sanitizeString(input: string): string {
-  if (!input) return '';
-  return String(input)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-    .trim();
-}
+import { sanitizeString } from '../utils/sanitize.js';
 
 export async function pantryRoutes(fastify: FastifyInstance): Promise<void> {
   const db = getDb();

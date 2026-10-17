@@ -7,18 +7,27 @@ export function getDatabasePath(dbUrl?: string): string {
   if (url === ':memory:') {
     return ':memory:';
   }
-  const cleanPath = url.replace(/^sqlite:\/\//, '');
-  const absolutePath = path.isAbsolute(cleanPath)
+  let cleanPath = url.replace(/^sqlite:\/\//, '');
+  let absolutePath = path.isAbsolute(cleanPath)
     ? cleanPath
     : path.resolve(process.cwd(), cleanPath);
-  const dir = path.dirname(absolutePath);
-  if (!fs.existsSync(dir)) {
-    try {
+  let dir = path.dirname(absolutePath);
+
+  try {
+    if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
-    } catch {
-      // directory creation handled by OS/container permissions
     }
+  } catch (err) {
+    // If target directory is unwritable (e.g. /var/data on Render Free tier without a mounted disk),
+    // automatically fallback to local project ./data directory
+    console.warn(`[Database] Warning: Cannot create database directory at '${dir}'. Falling back to local './data' directory.`);
+    const fallbackDir = path.resolve(process.cwd(), 'data');
+    if (!fs.existsSync(fallbackDir)) {
+      fs.mkdirSync(fallbackDir, { recursive: true });
+    }
+    absolutePath = path.resolve(fallbackDir, 'pantry.db');
   }
+
   return absolutePath;
 }
 

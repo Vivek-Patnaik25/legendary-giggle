@@ -143,12 +143,21 @@ This living document records the milestone roadmap, every major architectural an
   - *Single process clustering only:* Hides inter-process communication, port collisions, and multi-node header injection.
 
 ### Decision 008: Deliberate Single-Instance Render Deployment with SQLite Persistent Disk
-- **Decision:** Deploy Pantry Rescue to Render as a single web service instance (`numInstances: 1`) using a persistent disk mount (at `/var/data`) for SQLite storage (`DATABASE_URL=sqlite:///var/data/pantry.db`).
+- **Decision:** Deploy Pantry Rescue to Render as a single web service instance (`numInstances: 1`) using a persistent disk mount (at `/var/data`) for SQLite storage (`DATABASE_URL=sqlite:///var/data/pantry.db`) on paid Starter tier, or `./data/pantry.db` on Free tier.
 - **Why:** Deliberate decision to keep hosting operational simplicity high and costs low while maintaining data durability across deploys and container recycles. It fulfills all product guarantees without requiring an external paid database. Because block storage persistent disks can only be mounted to a single instance, horizontal scaling is deliberately constrained to 1 instance.
 - **Alternatives Rejected:**
-  - *Ephemeral disk SQLite:* Wipes inventory and user accounts on every Render deploy or restart.
   - *PostgreSQL requirement for initial deployment:* Adds deployment complexity and extra service costs for small households.
 - **Trade-offs:** Constrains Render service to 1 instance. Horizontal scaling beyond 1 instance requires migrating to PostgreSQL and Redis, as fully documented in `docs/deployment-audit.md`.
+
+### Decision 009: Node.js Runtime Pinning (Node 22 LTS)
+- **Decision:** Pin Node.js runtime strictly to Active LTS (`22.14.0`) across `.node-version`, `.nvmrc`, `package.json` (`"engines": { "node": ">=20.0.0 <23.0.0" }`), and `render.yaml` (`NODE_VERSION: 22.14.0`).
+- **Why:** Render defaults to bleeding-edge Node 24.21.0 on newly created services. Node 24 modified V8 environment cleanup hooks, causing native addon `better-sqlite3` to trigger a core dump abort (`Assertion failed: (env) != nullptr in node::RemoveEnvironmentCleanupHook`). Pinning to Node 22 LTS completely resolves this native crash.
+
+### Decision 010: Render Free Tier Compatibility & Database Evaluation
+- **Decision:** Provide out-of-the-box support for the Render Free Tier ($0/month) with local SQLite (`./data/pantry.db`) and automatic fallback if unwritable paths (like `/var/data`) are specified without a mounted disk.
+- **Evaluation on MongoDB vs Relational:**
+  - *MongoDB Rejected:* Pantry Rescue requires relational data integrity: foreign keys (`household_id`, `user_id`), atomic delta operations (`item_deltas`) to eliminate lost-update concurrency races, versioned SQL migrations (`schema_migrations`), and audit logging. Rewriting to MongoDB would forfeit transactional safety and require discarding all 41 validated unit and integration tests.
+  - *Free Cloud Persistence Recommendation:* For households wanting $0 permanent persistence across Render free-tier spin-downs, the recommended path is **Turso (libSQL)** — which provides 9 GB free cloud SQLite using identical SQL syntax — or **Supabase / Neon (Serverless PostgreSQL)**.
 
 ---
 

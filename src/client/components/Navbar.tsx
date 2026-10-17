@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                     isActive
                       ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-xs'
-                      : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                      : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -225,7 +225,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
                 isActive
                   ? 'text-stone-900 dark:text-stone-100'
-                  : 'text-stone-400 dark:text-stone-500 hover:text-stone-600'
+                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
               }`}
             >
               <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.2]' : 'stroke-[1.8]'}`} />

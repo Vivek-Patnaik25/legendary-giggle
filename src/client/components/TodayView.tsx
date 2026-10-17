@@ -108,7 +108,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
           <div className="flex items-center gap-2.5 text-xs sm:text-sm">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
             <span>
-              Used <strong>{feedback.itemName}</strong>. {feedback.message}
+              Saved! Used <strong>{feedback.itemName}</strong>. {feedback.message}
             </span>
           </div>
           <X className="w-4 h-4 opacity-60 hover:opacity-100 shrink-0 ml-2" />

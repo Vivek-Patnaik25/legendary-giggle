@@ -112,7 +112,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
           <div className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100">
             {pluralize(streak, 'week')}
           </div>
-          <p className="text-[11px] text-stone-400 mt-1">
+          <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
             Consecutive weeks below waste limit
           </p>
         </div>
@@ -126,7 +126,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
           <div className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100">
             {pluralize(rescued, 'item')}
           </div>
-          <p className="text-[11px] text-stone-400 mt-1">
+          <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
             Cooked before expiration this week
           </p>
         </div>
@@ -140,7 +140,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
           <div className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100">
             {scorePercent}%
           </div>
-          <p className="text-[11px] text-stone-400 mt-1">
+          <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
             Of processed food eaten, not binned
           </p>
         </div>
@@ -159,7 +159,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
             <span>{wasted}</span>
             <span className="text-xs font-sans font-normal text-stone-500">/ max {target}</span>
           </div>
-          <p className={`text-[11px] mt-1 ${isPactMet ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-tomato font-medium'}`}>
+          <p className={`text-[11px] mt-1 ${isPactMet ? 'text-emerald-700 dark:text-emerald-400 font-medium' : 'text-tomato font-medium'}`}>
             {isPactMet ? 'Within household target' : 'Exceeded target limit'}
           </p>
         </div>
@@ -278,7 +278,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
                     </strong>
                   </span>
                 </div>
-                <span className="text-[11px] text-stone-400 shrink-0">{evt.date}</span>
+                <span className="text-[11px] text-stone-500 dark:text-stone-400 shrink-0">{evt.date}</span>
               </div>
             ))}
           </div>

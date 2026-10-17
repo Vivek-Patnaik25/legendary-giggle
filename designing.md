@@ -255,6 +255,70 @@ Real behavioral change requires real rewards for real agency:
 - **Honest Streaks & Badges:** Streaks increment only when items are actively rescued. Inactive weeks show an encouraging "Start a rescue" state rather than empty praise. Badges feature explicit fractional progress bars (e.g. "3 of 5 rescues to unlock Onion Survivor").
 - **Local Event Table (`analytics_events`):** Stores event logs (`first_item_added`, `first_cook`, `day_1_return`, `items_used_per_week`, `wasted_items_per_week`) locally with zero third-party trackers or telemetry overhead.
 
+### 3.8 Automated Acceptance Verification & Real UI Evidence
+
+The redesigned UI was tested and validated end-to-end via Playwright and Axe Core automated acceptance tests (`scripts/verify-acceptance.ts` / `npm run test:acceptance`).
+
+```
+=== Starting Pantry Rescue Acceptance Checks ===
+
+✓ Test server running at http://127.0.0.1:52803
+
+--- Running Check 1: Time-to-first-use (cold state) ---
+✓ Time-to-first-use completed in 1.46s (Target: < 60s)
+
+--- Seeding items for complete flow capture ---
+
+--- Running Check 2: Screenshot Capture (docs/screens/) ---
+  ✓ Saved desktop-light-today.png
+  ✓ Saved desktop-light-fridge.png
+  ✓ Saved desktop-light-wins.png
+  ✓ Saved desktop-light-modal-report.png
+  ✓ Saved desktop-light-modal-recipe.png
+  ✓ Saved mobile-light-today.png
+  ✓ Saved mobile-light-fridge.png
+  ✓ Saved mobile-light-wins.png
+  ✓ Saved mobile-light-modal-report.png
+  ✓ Saved mobile-light-modal-recipe.png
+  ✓ Saved desktop-dark-today.png
+  ✓ Saved desktop-dark-fridge.png
+  ✓ Saved desktop-dark-wins.png
+  ✓ Saved desktop-dark-modal-report.png
+  ✓ Saved desktop-dark-modal-recipe.png
+  ✓ Saved mobile-dark-today.png
+  ✓ Saved mobile-dark-fridge.png
+  ✓ Saved mobile-dark-wins.png
+  ✓ Saved mobile-dark-modal-report.png
+  ✓ Saved mobile-dark-modal-recipe.png
+
+--- Running Check 3: Axe Accessibility Audit ---
+  Today View violations (serious/critical): 0
+  Fridge View violations (serious/critical): 0
+  Wins View violations (serious/critical): 0
+✓ Accessibility audit passed (0 serious or critical violations)
+
+--- Running Check 4: Keyboard Navigation Test ---
+  ✓ Modal opened via keyboard Enter
+  ✓ Modal closed via keyboard Escape
+✓ Keyboard navigation passed
+
+--- Running Check 5: DOM Entity Scanner (no raw HTML entities) ---
+✓ DOM entity scanner passed (0 double-escaped entities found in rendered DOM)
+
+=== ALL 5 ACCEPTANCE CHECKS PASSED SUCCESSFULLY ===
+```
+
+### 3.9 Before vs. After Screen Architecture
+
+| Screen | Previous Design (AI Dashboard Archetype) | Redesigned Craft Experience |
+| :--- | :--- | :--- |
+| **Today / Home** | Cluttered dark grid with neon gradients, multiple competing action buttons, repetitive urgency scores, and an overwhelming recipe list. | **Tactile Daily Ritual:** Soft warm paper base (`#FAF7F2`), Sir Expiry mascot header capped at 1 restrained reaction, top 3 urgent items with a single-tap "Use" action, and 3 dinner ideas ranked strictly by expiring ingredients. |
+| **Fridge / Inventory** | Dense table/grid mixing pantry, fridge, and freezer with duplicate numerical urgency badges and small stepper buttons. | **Calm Kitchen Shelf:** Unified "Fridge" vocabulary, location filter pills with counts, single freshness progress bar per item with human relative days ("2 days left", "Today"), and one primary floating "+ Add item" button. |
+| **Wins / Scoreboard** | Generic cards with glowing borders and unearned streaks praise. Missing fractional progress. | **Things 3 & Duolingo Craft:** Honest streaks that only increment when food is explicitly rescued; achievement cards with fractional progress bars ("3 of 5 rescues to unlock Scrappy Chef"); chronological audit trail. |
+| **Add Item Modal** | Generic form inputs without defaults; barcode scanner buried in settings. | **Accessible Dialog:** Focus-trapped modal with full backdrop, one-tap common staple presets, smart shelf life estimation, integrated barcode scanner, and single "Add to Fridge" primary action. |
+| **Recipe Modal** | Ingredients checklist had discrepancies with the card due to naive substring matching. | **Verified Recipe Card:** Exact 100% parity with card via canonical engine matching; accessible checklist indicating which ingredients are in the fridge vs needed from grocery store; one-tap "Cook Dinner". |
+| **Weekly Report Card** | Generic dark modal without clear export or share mechanism. | **Shareable Kitchen Postcard:** Cozy kitchen aesthetic featuring Sir Expiry's dispatch, weekly rescue vs waste numbers, streak indicator, and native Web Share / clipboard copy for household sharing. |
+
 ---
 
 ## 4. Load Test Results & Known Gaps

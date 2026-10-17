@@ -22,4 +22,15 @@ export function resetDbForTesting(customPath?: string): Database.Database {
   return dbInstance;
 }
 
+export function closeDb(): void {
+  if (dbInstance) {
+    try {
+      dbInstance.close();
+    } catch {
+      // ignore
+    }
+    dbInstance = null;
+  }
+}
+
 export { initDatabase, getDatabasePath };

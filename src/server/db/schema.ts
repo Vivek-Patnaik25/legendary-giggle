@@ -4,16 +4,22 @@ import fs from 'fs';
 
 export function getDatabasePath(dbUrl?: string): string {
   const url = dbUrl || process.env.DATABASE_URL || 'sqlite://./data/pantry.db';
-  if (url.startsWith('sqlite://')) {
-    const relativePath = url.replace('sqlite://', '');
-    const absolutePath = path.resolve(process.cwd(), relativePath);
-    const dir = path.dirname(absolutePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    return absolutePath;
+  if (url === ':memory:') {
+    return ':memory:';
   }
-  return ':memory:';
+  const cleanPath = url.replace(/^sqlite:\/\//, '');
+  const absolutePath = path.isAbsolute(cleanPath)
+    ? cleanPath
+    : path.resolve(process.cwd(), cleanPath);
+  const dir = path.dirname(absolutePath);
+  if (!fs.existsSync(dir)) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch {
+      // directory creation handled by OS/container permissions
+    }
+  }
+  return absolutePath;
 }
 
 export function initDatabase(dbPath?: string): Database.Database {

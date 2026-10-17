@@ -6,7 +6,7 @@ import fastifyStatic from '@fastify/static';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { getDb } from './db/index.js';
+import { getDb, closeDb } from './db/index.js';
 import { authRoutes } from './routes/auth.js';
 import { householdRoutes, inviteRoutes } from './routes/households.js';
 import { pantryRoutes } from './routes/pantry.js';
@@ -28,6 +28,11 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   // Attach Request-ID to all responses
   app.addHook('onSend', async (request, reply) => {
     reply.header('X-Request-Id', request.id);
+  });
+
+  // Close database cleanly on server termination
+  app.addHook('onClose', async () => {
+    closeDb();
   });
 
   // CORS
@@ -76,8 +81,8 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     });
   }
 
-  // Health Endpoint
-  app.get('/health', async (_req: FastifyRequest, reply: FastifyReply) => {
+  // Health Endpoints (both /health and /api/health supported)
+  const healthHandler = async (_req: FastifyRequest, reply: FastifyReply) => {
     const db = getDb(options.dbPath);
     let dbStatus = 'ok';
     try {
@@ -92,7 +97,10 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
       db: dbStatus,
       timestamp: new Date().toISOString(),
     });
-  });
+  };
+
+  app.get('/health', healthHandler);
+  app.get('/api/health', healthHandler);
 
   // Metrics Endpoint
   app.get('/metrics', async (_req: FastifyRequest, reply: FastifyReply) => {

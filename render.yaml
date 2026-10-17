@@ -1,0 +1,28 @@
+# Render Blueprint Configuration for Pantry Rescue
+# Documentation: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: pantry-rescue
+    runtime: node
+    plan: starter # Persistent disks require Starter plan ($7/mo)
+    region: oregon
+    numInstances: 1 # Strictly single-instance due to SQLite block storage locking
+    buildCommand: npm run build
+    startCommand: npm run start:web
+    healthCheckPath: /health
+    disk:
+      name: pantry-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        value: sqlite:///var/data/pantry.db
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SESSION_SECRET
+        generateValue: true

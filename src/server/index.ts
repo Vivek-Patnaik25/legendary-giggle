@@ -16,12 +16,15 @@ const app = buildApp({
 const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];
 for (const signal of signals) {
   process.on(signal, async () => {
+    console.log(`[Shutdown] Received ${signal}. Draining HTTP connections and closing database cleanly...`);
     app.log.info({ signal }, 'Graceful shutdown initiated');
     try {
       await app.close();
+      console.log('[Shutdown] Server HTTP connections and database closed cleanly. Exiting with code 0.');
       app.log.info('Server closed cleanly');
       process.exit(0);
     } catch (err) {
+      console.error('[Shutdown] Error during graceful shutdown:', err);
       app.log.error(err, 'Error during graceful shutdown');
       process.exit(1);
     }

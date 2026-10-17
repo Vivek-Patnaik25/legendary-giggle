@@ -3,6 +3,8 @@ import { useAuth } from './AuthContext.js';
 import { getOfflineDb } from '../db/index.js';
 import { queueMutation, flushSyncQueue, getPendingMutationsCount, purgeLocalHouseholdData } from '../sync.js';
 import confetti from 'canvas-confetti';
+import { trackLocalEvent, checkDay1Return } from '../analytics.js';
+import { cleanText } from '../utils/text.js';
 
 export interface PantryItem {
   id: string;
@@ -74,6 +76,7 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    checkDay1Return();
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -110,13 +113,18 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const itemsRes = await fetch(`/api/households/${hhId}/items?status=active`);
         if (itemsRes.ok) {
           const data = await itemsRes.json();
-          setItems(data.items || []);
+          const cleanItems = (data.items || []).map((i: any) => ({
+            ...i,
+            name: cleanText(i.name),
+            category: cleanText(i.category),
+          }));
+          setItems(cleanItems);
           setMascot(data.mascot || null);
 
           // Save to IndexedDB cache
           const db = await getOfflineDb();
           const tx = db.transaction('items', 'readwrite');
-          for (const item of data.items || []) {
+          for (const item of cleanItems) {
             await tx.store.put(item);
           }
           await tx.done;
@@ -126,7 +134,16 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const rescueRes = await fetch(`/api/households/${hhId}/recipes/rescue`);
         if (rescueRes.ok) {
           const rData = await rescueRes.json();
-          setRescueRecipes(rData.recipes || []);
+          const cleanRecipes = (rData.recipes || []).map((r: any) => ({
+            ...r,
+            title: cleanText(r.title),
+            usedPantryItems: (r.usedPantryItems || []).map((u: any) => ({
+              ...u,
+              name: cleanText(u.name),
+            })),
+            missingIngredients: (r.missingIngredients || []).map((m: any) => cleanText(m)),
+          }));
+          setRescueRecipes(cleanRecipes);
         }
 
         // Fetch smart shopping hints
@@ -212,6 +229,7 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Failed to add item');
+      trackLocalEvent('first_item_added', { name: payload.name, category: payload.category }, hhId);
     } else {
       await queueMutation({
         idempotencyKey: key,
@@ -266,6 +284,8 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         body: JSON.stringify({ amount }),
       });
       if (res.ok) {
+        trackLocalEvent('first_cook', { itemId, amount }, hhId);
+        trackLocalEvent('items_used_per_week', { itemId, amount }, hhId);
         const data = await res.json();
         // Playful celebration confetti if new badge unlocked!
         if (data.newBadges && data.newBadges.length > 0) {
@@ -302,6 +322,7 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
         body: JSON.stringify({ amount }),
       });
+      trackLocalEvent('wasted_items_per_week', { itemId, amount }, hhId);
     } else {
       await queueMutation({
         idempotencyKey: key,

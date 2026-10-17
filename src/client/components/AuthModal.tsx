@@ -1,24 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.js';
-import { Sparkles, Key, Mail, User, ShieldAlert, ArrowRight } from 'lucide-react';
+import { AccessibleModal } from './AccessibleModal.js';
+import { Mail, Lock, User, Save, LogIn, ArrowRight } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
+  onClose?: () => void;
+  defaultMode?: 'claim' | 'login' | 'register';
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen }) => {
-  const { login, register, refreshAuth } = useAuth();
+export const AuthModal: React.FC<AuthModalProps> = ({
+  isOpen,
+  onClose = () => {},
+  defaultMode = 'claim',
+}) => {
+  const { user, login, register, claimGuest, refreshAuth } = useAuth();
 
-  const [mode, setMode] = useState<'login' | 'register'>('register');
+  const isGuest = user?.isGuest;
+  const [mode, setMode] = useState<'claim' | 'login' | 'register'>(
+    isGuest ? 'claim' : defaultMode === 'claim' ? 'register' : defaultMode
+  );
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [householdName, setHouseholdName] = useState('My Kitchen');
+  const [householdName, setHouseholdName] = useState('Kitchen');
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check URL query parameters for ?invite=<code>
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('invite');
@@ -28,7 +38,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen }) => {
     }
   }, []);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isGuest) {
+      setMode('claim');
+    } else if (defaultMode) {
+      setMode(defaultMode === 'claim' ? 'login' : defaultMode);
+    }
+  }, [isGuest, defaultMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,10 +52,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen }) => {
     setIsLoading(true);
 
     try {
-      if (mode === 'register') {
+      if (mode === 'claim') {
+        await claimGuest(email, password, displayName);
+        onClose();
+      } else if (mode === 'register') {
         await register(email, password, displayName);
-
-        // If an invite code was supplied, redeem it automatically
         if (inviteCode.trim()) {
           const redRes = await fetch(`/api/invites/${encodeURIComponent(inviteCode.trim())}/redeem`, {
             method: 'POST',
@@ -48,16 +65,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen }) => {
             window.history.replaceState({}, document.title, window.location.pathname);
           }
         } else {
-          // Otherwise, create initial household for the user
           await fetch('/api/households', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: householdName || 'My Kitchen' }),
+            body: JSON.stringify({ name: householdName || 'Kitchen' }),
           });
         }
         await refreshAuth();
+        onClose();
       } else {
         await login(email, password);
+        onClose();
       }
     } catch (err: any) {
       setError(err.message || 'Authentication error');
@@ -66,131 +84,156 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
-      <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700/80 shadow-2xl p-6 sm:p-8 text-slate-100">
-        {/* Onboarding Mascot Header */}
-        <div className="text-center space-y-3 mb-6">
-          <div className="w-20 h-20 mx-auto rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-xl shadow-emerald-500/10 bg-slate-800 p-1 flex items-center justify-center">
-            <img src="/assets/sir_expiry_calm.png" alt="Sir Expiry Mascot" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-100">
-              Welcome to Pantry Rescue
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              "Never again shall a lone bell pepper perish in the shadows!" &mdash; Sir Expiry
-            </p>
-          </div>
-        </div>
+  const modalTitle =
+    mode === 'claim'
+      ? 'Save Your Kitchen'
+      : mode === 'register'
+      ? 'Create Household'
+      : 'Sign In';
 
-        {/* Mode Toggle */}
-        <div className="flex rounded-lg bg-slate-800 p-1 mb-5 border border-slate-700/60">
-          <button
-            type="button"
-            onClick={() => { setMode('register'); setError(''); }}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer ${
-              mode === 'register' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Create Household
-          </button>
+  return (
+    <AccessibleModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={modalTitle}
+      maxWidth="max-w-md"
+    >
+      <div className="space-y-4">
+        {/* Mode Selector */}
+        <div className="flex rounded-lg bg-stone-100 dark:bg-stone-900/80 p-1 border border-stone-200 dark:border-stone-800 text-xs font-semibold">
+          {isGuest && (
+            <button
+              type="button"
+              onClick={() => { setMode('claim'); setError(''); }}
+              className={`flex-1 py-1.5 rounded-md transition cursor-pointer ${
+                mode === 'claim'
+                  ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-xs'
+                  : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+              }`}
+            >
+              Save Progress
+            </button>
+          )}
           <button
             type="button"
             onClick={() => { setMode('login'); setError(''); }}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer ${
-              mode === 'login' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+            className={`flex-1 py-1.5 rounded-md transition cursor-pointer ${
+              mode === 'login'
+                ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-xs'
+                : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
             }`}
           >
             Sign In
           </button>
+          <button
+            type="button"
+            onClick={() => { setMode('register'); setError(''); }}
+            className={`flex-1 py-1.5 rounded-md transition cursor-pointer ${
+              mode === 'register'
+                ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-xs'
+                : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+            }`}
+          >
+            New Account
+          </button>
         </div>
 
+        {mode === 'claim' && (
+          <p className="text-xs text-stone-500">
+            Set an email and password to preserve your items and rescue milestones across devices.
+          </p>
+        )}
+
         {error && (
-          <div className="p-3 mb-4 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs">
+          <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-tomato">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
-          {mode === 'register' && (
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {(mode === 'claim' || mode === 'register') && (
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Your Name</label>
-              <div className="relative">
-                <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Maya"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-100 outline-none focus:border-emerald-500"
-                />
-              </div>
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                Your Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Alex"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl text-stone-900 dark:text-stone-100 outline-none"
+              />
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Email Address</label>
-            <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="email"
-                required
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-100 outline-none focus:border-emerald-500"
-              />
-            </div>
+            <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+              Email Address
+            </label>
+            <input
+              type="email"
+              required
+              placeholder="you@domain.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 text-xs bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl text-stone-900 dark:text-stone-100 outline-none"
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
-            <div className="relative">
-              <Key className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="password"
-                required
-                minLength={6}
-                placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-100 outline-none focus:border-emerald-500"
-              />
-            </div>
+            <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 text-xs bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl text-stone-900 dark:text-stone-100 outline-none"
+            />
           </div>
 
           {mode === 'register' && !inviteCode && (
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Household / Fridge Name</label>
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                Kitchen Name
+              </label>
               <input
                 type="text"
-                required
-                placeholder="e.g. Flat 4B, The Green Kitchen"
+                placeholder="e.g. Apartment 4B"
                 value={householdName}
                 onChange={(e) => setHouseholdName(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-100 outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 text-xs bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl text-stone-900 dark:text-stone-100 outline-none"
               />
             </div>
           )}
 
-          {inviteCode && (
-            <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-xs">
-              Joining via invite code: <strong>{inviteCode}</strong>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full mt-2 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:scale-98 text-white font-bold text-sm rounded-lg shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <span>{isLoading ? 'Please wait...' : mode === 'register' ? 'Launch Pantry Rescue' : 'Sign In'}</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="pt-2 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-semibold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="px-4 py-2 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-950 font-semibold text-xs rounded-xl shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
+            >
+              {isLoading
+                ? 'Processing...'
+                : mode === 'claim'
+                ? 'Save Kitchen'
+                : mode === 'register'
+                ? 'Create Account'
+                : 'Sign In'}
+            </button>
+          </div>
         </form>
       </div>
-    </div>
+    </AccessibleModal>
   );
 };

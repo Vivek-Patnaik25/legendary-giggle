@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.js';
+import { AccessibleModal } from './AccessibleModal.js';
+import { cleanText } from '../utils/text.js';
 import {
-  X,
   Users,
   UserPlus,
   Copy,
@@ -10,7 +11,6 @@ import {
   Trash2,
   Clock,
   Target,
-  AlertTriangle,
 } from 'lucide-react';
 
 interface HouseholdSettingsModalProps {
@@ -27,6 +27,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [weeklyTarget, setWeeklyTarget] = useState(currentHousehold?.weekly_waste_target || 2.0);
   const [isSavingTarget, setIsSavingTarget] = useState(false);
+  const [targetMessage, setTargetMessage] = useState('');
 
   const isOwner = currentHousehold?.role === 'owner';
 
@@ -60,11 +61,9 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
     }
   }, [isOpen, currentHousehold]);
 
-  if (!isOpen || !currentHousehold) return null;
-
   const handleCreateInvite = async () => {
     try {
-      const res = await fetch(`/api/households/${currentHousehold.id}/invites`, {
+      const res = await fetch(`/api/households/${currentHousehold?.id}/invites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: inviteRole, expiresInDays: 7 }),
@@ -79,7 +78,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
 
   const handleRevokeInvite = async (inviteId: string) => {
     try {
-      await fetch(`/api/households/${currentHousehold.id}/invites/${inviteId}`, {
+      await fetch(`/api/households/${currentHousehold?.id}/invites/${inviteId}`, {
         method: 'DELETE',
       });
       await loadData();
@@ -89,9 +88,9 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
   };
 
   const handleRemoveMember = async (memberUserId: string) => {
-    if (!confirm('Are you sure you want to remove this member from the household?')) return;
+    if (!confirm('Remove this member from the kitchen?')) return;
     try {
-      await fetch(`/api/households/${currentHousehold.id}/members/${memberUserId}`, {
+      await fetch(`/api/households/${currentHousehold?.id}/members/${memberUserId}`, {
         method: 'DELETE',
       });
       await loadData();
@@ -100,159 +99,111 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
     }
   };
 
-  const handleSaveTarget = async () => {
+  const handleSaveWasteTarget = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSavingTarget(true);
+    setTargetMessage('');
     try {
-      await fetch(`/api/households/${currentHousehold.id}`, {
+      const res = await fetch(`/api/households/${currentHousehold?.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ weeklyWasteTarget: weeklyTarget }),
+        body: JSON.stringify({ weekly_waste_target: Number(weeklyTarget) }),
       });
-      await refreshAuth();
+      if (res.ok) {
+        setTargetMessage('Waste target saved.');
+        await refreshAuth();
+      }
+    } catch {
+      setTargetMessage('Failed to update target.');
     } finally {
       setIsSavingTarget(false);
     }
   };
 
-  const copyInviteLink = (code: string) => {
-    const inviteUrl = `${window.location.origin}/?invite=${code}`;
+  const copyToClipboard = (text: string) => {
+    const inviteUrl = `${window.location.origin}?invite=${text}`;
     navigator.clipboard?.writeText(inviteUrl);
-    setCopiedCode(code);
+    setCopiedCode(text);
     setTimeout(() => setCopiedCode(null), 2500);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700/80 shadow-2xl p-6 text-slate-100 max-h-[90vh] overflow-y-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+    <AccessibleModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${cleanText(currentHousehold?.name || 'Kitchen')} Settings`}
+      maxWidth="max-w-lg"
+    >
+      <div className="space-y-6">
+        {/* Waste Reduction Target */}
+        <section className="space-y-3">
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-emerald-400" />
-            <h3 className="font-bold text-lg text-slate-100">{currentHousehold.name} Settings</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* 1. Household Pact Weekly Target */}
-        {isOwner && (
-          <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
-              <Target className="w-4 h-4 text-indigo-400" />
-              <span>Weekly Household Pact Target</span>
-            </div>
-            <p className="text-xs text-slate-400">
-              Max number of wasted items allowed per week to maintain your household rescue streak:
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                min="0"
-                step="0.5"
-                value={weeklyTarget}
-                onChange={(e) => setWeeklyTarget(parseFloat(e.target.value) || 0)}
-                className="w-24 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleSaveTarget}
-                disabled={isSavingTarget}
-                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-semibold cursor-pointer"
-              >
-                {isSavingTarget ? 'Saving...' : 'Update Target'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 2. Invite Members */}
-        {isOwner && (
-          <div className="space-y-3">
-            <h4 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-emerald-400" />
-              <span>Generate Household Invite Link</span>
+            <Target className="w-4 h-4 text-stone-500" />
+            <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100">
+              Household Waste Limit
             </h4>
-            <div className="flex gap-2">
-              <select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value as any)}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 outline-none cursor-pointer"
-              >
-                <option value="member">Member (Full Access)</option>
-                <option value="guest">Guest (View Only)</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleCreateInvite}
-                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition cursor-pointer"
-              >
-                Create Invite
-              </button>
-            </div>
-
-            {/* Active Invites List */}
-            {invites.length > 0 && (
-              <div className="space-y-2 pt-1">
-                {invites.map((inv) => (
-                  <div key={inv.id} className="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs">
-                    <div>
-                      <div className="font-mono text-emerald-300 font-bold">{inv.code}</div>
-                      <div className="text-[11px] text-slate-400">Role: {inv.role} &bull; Expires in 7 days</div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => copyInviteLink(inv.code)}
-                        className="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded flex items-center gap-1 cursor-pointer"
-                      >
-                        {copiedCode === inv.code ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedCode === inv.code ? 'Copied' : 'Copy'}</span>
-                      </button>
-                      <button
-                        onClick={() => handleRevokeInvite(inv.id)}
-                        className="p-1 hover:text-rose-400 text-slate-500 cursor-pointer"
-                        title="Revoke invite"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
-        )}
+          <p className="text-xs text-stone-500">
+            Set your weekly waste ceiling. Rescues must keep waste below this target to maintain streaks.
+          </p>
 
-        {/* 3. Members List */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-            <Users className="w-4 h-4 text-indigo-400" />
-            <span>Active Household Members ({members.length})</span>
-          </h4>
-          <div className="divide-y divide-slate-800 rounded-xl border border-slate-800 bg-slate-800/40 overflow-hidden text-xs">
+          <form onSubmit={handleSaveWasteTarget} className="flex items-center gap-2">
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              disabled={!isOwner}
+              value={weeklyTarget}
+              onChange={(e) => setWeeklyTarget(parseFloat(e.target.value) || 0)}
+              className="w-24 px-3 py-1.5 text-xs bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl text-stone-900 dark:text-stone-100 outline-none"
+            />
+            <span className="text-xs text-stone-500">items/week</span>
+            {isOwner && (
+              <button
+                type="submit"
+                disabled={isSavingTarget}
+                className="px-3.5 py-1.5 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-xs font-semibold rounded-xl hover:opacity-90 transition cursor-pointer disabled:opacity-50"
+              >
+                {isSavingTarget ? 'Saving...' : 'Save'}
+              </button>
+            )}
+            {targetMessage && (
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                {targetMessage}
+              </span>
+            )}
+          </form>
+        </section>
+
+        {/* Household Members */}
+        <section className="space-y-3 pt-3 border-t border-stone-100 dark:border-stone-800">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-stone-500" />
+            <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100">
+              Members ({members.length})
+            </h4>
+          </div>
+
+          <div className="space-y-2 text-xs">
             {members.map((m) => (
-              <div key={m.id} className="p-3 flex items-center justify-between gap-3">
+              <div
+                key={m.userId}
+                className="p-2.5 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-stone-50/60 dark:bg-stone-900/40 flex items-center justify-between"
+              >
                 <div>
-                  <div className="font-semibold text-slate-100">{m.display_name}</div>
-                  <div className="text-slate-400 text-[11px]">{m.email}</div>
+                  <div className="font-semibold text-stone-900 dark:text-stone-100">
+                    {cleanText(m.displayName || m.email)}
+                  </div>
+                  <div className="text-[11px] text-stone-400">{cleanText(m.email)}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                    m.role === 'owner'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : m.role === 'member'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                      : 'bg-slate-700 text-slate-300'
-                  }`}>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-stone-200/60 dark:bg-stone-800 text-stone-700 dark:text-stone-300 uppercase tracking-wider">
                     {m.role}
                   </span>
                   {isOwner && m.role !== 'owner' && (
                     <button
-                      onClick={() => handleRemoveMember(m.user_id)}
-                      className="p-1 text-slate-400 hover:text-rose-400 cursor-pointer"
+                      onClick={() => handleRemoveMember(m.userId)}
+                      className="text-stone-400 hover:text-tomato p-1 transition cursor-pointer"
                       title="Remove member"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -262,8 +213,86 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
               </div>
             ))}
           </div>
+        </section>
+
+        {/* Invite Codes (Owner only) */}
+        {isOwner && (
+          <section className="space-y-3 pt-3 border-t border-stone-100 dark:border-stone-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-stone-500" />
+                <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100">
+                  Invite Housemates
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={handleCreateInvite}
+                className="px-3 py-1 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-xs font-semibold rounded-lg hover:opacity-90 transition cursor-pointer"
+              >
+                Create Invite Link
+              </button>
+            </div>
+
+            {invites.length > 0 ? (
+              <div className="space-y-2 text-xs">
+                {invites.map((inv) => (
+                  <div
+                    key={inv.id}
+                    className="p-2.5 rounded-xl border border-stone-200/80 dark:border-stone-800/80 bg-stone-50/60 dark:bg-stone-900/40 flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="font-mono text-xs font-semibold text-stone-800 dark:text-stone-200">
+                        {inv.code}
+                      </div>
+                      <div className="text-[10px] text-stone-400">
+                        Role: {inv.role} &bull; Expires: {new Date(inv.expires_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => copyToClipboard(inv.code)}
+                        className="px-2.5 py-1 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-medium flex items-center gap-1 hover:bg-stone-200 dark:hover:bg-stone-700 transition cursor-pointer"
+                      >
+                        {copiedCode === inv.code ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-500" />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3" />
+                            <span>Copy Link</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleRevokeInvite(inv.id)}
+                        className="text-stone-400 hover:text-tomato p-1 transition cursor-pointer"
+                        title="Revoke invite"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-stone-400 italic">No active invite links.</p>
+            )}
+          </section>
+        )}
+
+        <div className="pt-2 flex justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition cursor-pointer"
+          >
+            Done
+          </button>
         </div>
       </div>
-    </div>
+    </AccessibleModal>
   );
 };

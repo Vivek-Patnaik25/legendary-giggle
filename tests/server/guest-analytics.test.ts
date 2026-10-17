@@ -1,16 +1,18 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { buildApp } from '../../src/server/app.js';
+import { resetDbForTesting } from '../../src/server/db/index.js';
 import { FastifyInstance } from 'fastify';
 
 describe('Guest Trial Flow & Local Analytics Events', () => {
   let app: FastifyInstance;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
+    resetDbForTesting(':memory:');
     app = buildApp({ dbPath: ':memory:', enableLogging: false });
     await app.ready();
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close();
   });
 

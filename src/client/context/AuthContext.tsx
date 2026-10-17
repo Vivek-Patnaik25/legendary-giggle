@@ -4,6 +4,7 @@ export interface User {
   id: string;
   email: string;
   displayName: string;
+  isGuest?: boolean;
 }
 
 export interface HouseholdSummary {
@@ -22,6 +23,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
+  claimGuest: (email: string, password: string, displayName?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
 }
@@ -53,12 +55,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCurrentHousehold(null);
         }
       } else {
-        setUser(null);
-        setHouseholds([]);
-        setCurrentHousehold(null);
+        // Automatically start in guest mode for seamless first-open trial
+        const guestRes = await fetch('/api/auth/guest', { method: 'POST' });
+        if (guestRes.ok) {
+          const guestData = await guestRes.json();
+          setUser(guestData.user);
+          setHouseholds(guestData.households || []);
+          setCurrentHousehold(guestData.households?.[0] || null);
+        } else {
+          setUser(null);
+          setHouseholds([]);
+          setCurrentHousehold(null);
+        }
       }
     } catch {
-      // Offline: keep cached user session if available
+      // Offline fallback: keep cached session if present
     } finally {
       setIsLoading(false);
     }
@@ -98,15 +109,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await refreshAuth();
   };
 
+  const claimGuest = async (email: string, password: string, displayName?: string) => {
+    const res = await fetch('/api/auth/claim-guest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, displayName }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Account creation failed');
+    }
+
+    await refreshAuth();
+  };
+
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {
       // ignore
     }
-    setUser(null);
-    setHouseholds([]);
-    setCurrentHousehold(null);
+    // After logging out, refreshAuth automatically sets up a clean guest session
+    await refreshAuth();
   };
 
   return (
@@ -119,6 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         register,
+        claimGuest,
         logout,
         refreshAuth,
       }}

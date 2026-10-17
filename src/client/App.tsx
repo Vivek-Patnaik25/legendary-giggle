@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext.js';
-import { usePantry } from './context/PantryContext.js';
 import { Navbar } from './components/Navbar.js';
-import { RescueBoard } from './components/RescueBoard.js';
-import { PantryInventory } from './components/PantryInventory.js';
-import { ScoreboardView } from './components/ScoreboardView.js';
+import { TodayView } from './components/TodayView.js';
+import { FridgeView } from './components/FridgeView.js';
+import { WinsView } from './components/WinsView.js';
 import { AddItemModal } from './components/AddItemModal.js';
 import { RecipeModal } from './components/RecipeModal.js';
 import { WeeklyReportModal } from './components/WeeklyReportModal.js';
 import { HouseholdSettingsModal } from './components/HouseholdSettingsModal.js';
 import { DevInboxModal } from './components/DevInboxModal.js';
 import { AuthModal } from './components/AuthModal.js';
-import { Flame, ShieldCheck, Utensils, Award, ChefHat, Sparkles } from 'lucide-react';
+import { checkDay1Return } from './analytics.js';
 
 export const App: React.FC = () => {
   const { user, currentHousehold, isLoading } = useAuth();
 
-  const [currentView, setCurrentView] = useState<'board' | 'inventory' | 'scoreboard'>('board');
+  const [currentTab, setCurrentTab] = useState<'today' | 'fridge' | 'wins'>('today');
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDevInboxOpen, setIsDevInboxOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'claim' | 'login' | 'register'>('claim');
   const [selectedRecipe, setSelectedRecipe] = useState<any | null>(null);
 
-  // Dark mode theme
+  // Dark mode theme: light by default
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('theme') !== 'light';
+    return localStorage.getItem('theme') === 'dark';
   });
 
   useEffect(() => {
@@ -38,117 +39,108 @@ export const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
+  // Check URL query parameters for ?dev=true or ?invite=...
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dev') === 'true' || params.get('inbox') === 'true') {
+      setIsDevInboxOpen(true);
+    }
+    if (params.get('invite')) {
+      setAuthModalMode('register');
+      setIsAuthModalOpen(true);
+    }
+  }, []);
+
+  // Track day 1 return
+  useEffect(() => {
+    if (currentHousehold?.id) {
+      checkDay1Return(currentHousehold.id);
+    }
+  }, [currentHousehold?.id]);
+
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-paper dark:bg-stone-950 flex items-center justify-center p-4">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-xl overflow-hidden animate-pulse border border-emerald-500/30">
-            <img src="/assets/logo.png" alt="Loading" className="w-full h-full object-cover" />
+          <div className="w-10 h-10 rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900 p-1">
+            <img src="/assets/logo.png" alt="Loading" className="w-full h-full object-cover animate-pulse" />
           </div>
-          <div className="text-sm font-semibold text-emerald-400">Loading Pantry Rescue...</div>
+          <span className="text-xs font-serif font-medium text-stone-500">
+            Checking your kitchen...
+          </span>
         </div>
-      </div>
-    );
-  }
-
-  // Not logged in or no household: show Auth & Onboarding Modal
-  if (!user || !currentHousehold) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-        <AuthModal isOpen={true} />
-        {/* Floating Dev Inbox button on login screen */}
-        <button
-          onClick={() => setIsDevInboxOpen(true)}
-          className="fixed bottom-4 right-4 text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700 shadow cursor-pointer"
-        >
-          Open Dev Inbox
-        </button>
-        <DevInboxModal isOpen={isDevInboxOpen} onClose={() => setIsDevInboxOpen(false)} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans">
-      {/* Top Navigation */}
+    <div className="min-h-screen bg-paper dark:bg-stone-950 text-stone-900 dark:text-stone-100 flex flex-col font-sans transition-colors selection:bg-stone-200 dark:selection:bg-stone-800">
+      {/* Top Header & Mobile Bottom Bar Navigation */}
       <Navbar
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
         onOpenAddItem={() => setIsAddItemOpen(true)}
-        onOpenDevInbox={() => setIsDevInboxOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenReport={() => setIsReportOpen(true)}
+        onOpenClaim={() => {
+          setAuthModalMode('claim');
+          setIsAuthModalOpen(true);
+        }}
+        onOpenDevInbox={() => setIsDevInboxOpen(true)}
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        {/* View Switcher Tabs (Desktop & Mobile) */}
-        <div className="flex border-b border-slate-800 mb-6 gap-2 sm:gap-6 overflow-x-auto scrollbar-none">
-          <button
-            onClick={() => setCurrentView('board')}
-            className={`pb-3 px-2 text-sm sm:text-base font-bold flex items-center gap-2 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              currentView === 'board'
-                ? 'border-emerald-400 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Flame className="w-4 h-4" />
-            <span>Rescue Board</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('inventory')}
-            className={`pb-3 px-2 text-sm sm:text-base font-bold flex items-center gap-2 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              currentView === 'inventory'
-                ? 'border-emerald-400 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Utensils className="w-4 h-4" />
-            <span>Pantry & Fridge</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('scoreboard')}
-            className={`pb-3 px-2 text-sm sm:text-base font-bold flex items-center gap-2 border-b-2 transition cursor-pointer whitespace-nowrap ${
-              currentView === 'scoreboard'
-                ? 'border-emerald-400 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Award className="w-4 h-4" />
-            <span>Scoreboard & Badges</span>
-          </button>
-        </div>
-
-        {/* View Content */}
-        {currentView === 'board' && (
-          <RescueBoard
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6">
+        {currentTab === 'today' && (
+          <TodayView
             onOpenAddItem={() => setIsAddItemOpen(true)}
             onCookRecipe={(recipe) => setSelectedRecipe(recipe)}
           />
         )}
 
-        {currentView === 'inventory' && (
-          <PantryInventory onOpenAddItem={() => setIsAddItemOpen(true)} />
+        {currentTab === 'fridge' && (
+          <FridgeView onOpenAddItem={() => setIsAddItemOpen(true)} />
         )}
 
-        {currentView === 'scoreboard' && (
-          <ScoreboardView onOpenReport={() => setIsReportOpen(true)} />
+        {currentTab === 'wins' && (
+          <WinsView onOpenReport={() => setIsReportOpen(true)} />
         )}
       </main>
 
       {/* Modals */}
-      <AddItemModal isOpen={isAddItemOpen} onClose={() => setIsAddItemOpen(false)} />
+      <AddItemModal
+        isOpen={isAddItemOpen}
+        onClose={() => setIsAddItemOpen(false)}
+      />
+
       <RecipeModal
         recipe={selectedRecipe}
         isOpen={Boolean(selectedRecipe)}
         onClose={() => setSelectedRecipe(null)}
       />
-      <WeeklyReportModal isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} />
-      <HouseholdSettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-      <DevInboxModal isOpen={isDevInboxOpen} onClose={() => setIsDevInboxOpen(false)} />
+
+      <WeeklyReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+      />
+
+      <HouseholdSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        defaultMode={authModalMode}
+      />
+
+      <DevInboxModal
+        isOpen={isDevInboxOpen}
+        onClose={() => setIsDevInboxOpen(false)}
+      />
     </div>
   );
 };

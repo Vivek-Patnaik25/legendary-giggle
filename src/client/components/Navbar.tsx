@@ -1,35 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { usePantry } from '../context/PantryContext.js';
 import {
-  ShieldAlert,
   Moon,
   Sun,
   Wifi,
   WifiOff,
   RefreshCw,
   LogOut,
-  Mail,
-  Home,
-  Plus,
   Settings,
-  Award,
+  Sparkles,
+  Layers,
+  Trophy,
+  Save,
+  ChevronDown,
 } from 'lucide-react';
 
 interface NavbarProps {
+  currentTab: 'today' | 'fridge' | 'wins';
+  onSelectTab: (tab: 'today' | 'fridge' | 'wins') => void;
   onOpenAddItem: () => void;
-  onOpenDevInbox: () => void;
   onOpenSettings: () => void;
-  onOpenReport: () => void;
+  onOpenClaim: () => void;
+  onOpenDevInbox: () => void;
   isDarkMode: boolean;
   setIsDarkMode: (val: boolean) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
+  currentTab,
+  onSelectTab,
   onOpenAddItem,
-  onOpenDevInbox,
   onOpenSettings,
-  onOpenReport,
+  onOpenClaim,
+  onOpenDevInbox,
   isDarkMode,
   setIsDarkMode,
 }) => {
@@ -37,152 +41,201 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { isOnline, pendingSyncCount, triggerSync } = usePantry();
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // Hidden keyboard shortcut for local dev inbox: Ctrl+Shift+D
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+        e.preventDefault();
+        onOpenDevInbox();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onOpenDevInbox]);
+
   const handleSyncClick = async () => {
+    if (!isOnline || isSyncing) return;
     setIsSyncing(true);
     await triggerSync();
     setIsSyncing(false);
   };
 
+  const isGuest = user?.isGuest || currentHousehold?.role === 'guest';
+
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-slate-900/90 border-b border-slate-800 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Brand / Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md shadow-emerald-500/20 border border-emerald-500/30 flex items-center justify-center bg-emerald-950">
-            <img src="/assets/logo.png" alt="Pantry Rescue Logo" className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <div className="font-bold text-lg tracking-tight bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-              Pantry Rescue
+    <>
+      <header className="sticky top-0 z-40 w-full border-b border-stone-200 dark:border-stone-800 bg-paper/95 dark:bg-stone-950/95 backdrop-blur-md transition-colors">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-15 flex items-center justify-between gap-3">
+          {/* Brand */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900 flex items-center justify-center shrink-0">
+              <img src="/assets/logo.png" alt="Pantry Rescue" className="w-full h-full object-cover" />
             </div>
-            <div className="text-[10px] text-slate-400 font-medium tracking-wide">
-              Shared Food Waste Shield
+            <div>
+              <span className="font-serif font-bold text-base tracking-tight text-stone-900 dark:text-stone-100">
+                Pantry Rescue
+              </span>
             </div>
           </div>
-        </div>
 
-        {/* Center: Household Switcher (if logged in) */}
-        {user && currentHousehold && (
-          <div className="hidden sm:flex items-center gap-2 bg-slate-800/80 rounded-lg px-3 py-1.5 border border-slate-700/60">
-            <Home className="w-4 h-4 text-emerald-400" />
-            <select
-              value={currentHousehold.id}
-              onChange={(e) => {
-                const selected = households.find(h => h.id === e.target.value);
-                if (selected) setCurrentHousehold(selected);
-              }}
-              className="bg-transparent text-sm font-medium text-slate-200 outline-none cursor-pointer pr-2"
-              aria-label="Select household"
-            >
-              {households.map((h) => (
-                <option key={h.id} value={h.id} className="bg-slate-800 text-slate-100">
-                  {h.name} ({h.role})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+          {/* Desktop Navigation Tabs */}
+          <nav className="hidden md:flex items-center gap-1 bg-stone-100 dark:bg-stone-900/80 p-1 rounded-xl border border-stone-200 dark:border-stone-800">
+            {[
+              { id: 'today', label: 'Today', icon: Sparkles },
+              { id: 'fridge', label: 'Fridge', icon: Layers },
+              { id: 'wins', label: 'Wins', icon: Trophy },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = currentTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => onSelectTab(tab.id as any)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    isActive
+                      ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-xs'
+                      : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-        {/* Right Action Icons */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Add Button */}
-          {user && currentHousehold && (
-            <button
-              onClick={onOpenAddItem}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-medium text-xs sm:text-sm rounded-lg shadow-sm shadow-emerald-500/30 transition-all cursor-pointer"
-              title="Add pantry item fast"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span className="hidden xs:inline">Add Item</span>
-            </button>
-          )}
-
-          {/* Online / Offline Sync Badge */}
-          <button
-            onClick={handleSyncClick}
-            disabled={!isOnline || isSyncing}
-            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full border transition-all cursor-pointer ${
-              isOnline
-                ? pendingSyncCount > 0
-                  ? 'bg-amber-950/40 text-amber-300 border-amber-600/40 animate-pulse'
-                  : 'bg-emerald-950/40 text-emerald-300 border-emerald-600/40'
-                : 'bg-rose-950/40 text-rose-300 border-rose-600/40'
-            }`}
-            title={isOnline ? 'Online - click to sync' : 'Offline mode active'}
-          >
-            {isOnline ? (
-              <>
-                <Wifi className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="hidden md:inline">
-                  {pendingSyncCount > 0 ? `${pendingSyncCount} syncing` : 'Online'}
-                </span>
-                {isSyncing && <RefreshCw className="w-3 h-3 animate-spin text-amber-400" />}
-              </>
+          {/* Right Controls */}
+          <div className="flex items-center gap-2">
+            {/* Guest Claim Prompt */}
+            {isGuest ? (
+              <button
+                onClick={onOpenClaim}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 hover:opacity-90 transition cursor-pointer"
+                title="Save this kitchen across devices"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Save fridge</span>
+              </button>
             ) : (
-              <>
-                <WifiOff className="w-3.5 h-3.5 text-rose-400" />
-                <span>Offline</span>
-              </>
+              /* Household selector for registered users */
+              households.length > 1 && (
+                <div className="hidden sm:flex items-center gap-1 text-xs text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-900 px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800">
+                  <select
+                    value={currentHousehold?.id}
+                    onChange={(e) => {
+                      const sel = households.find(h => h.id === e.target.value);
+                      if (sel) setCurrentHousehold(sel);
+                    }}
+                    className="bg-transparent outline-none cursor-pointer text-xs pr-1"
+                    aria-label="Select household"
+                  >
+                    {households.map(h => (
+                      <option key={h.id} value={h.id} className="bg-stone-100 dark:bg-stone-900">
+                        {h.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )
             )}
-          </button>
 
-          {/* Dev Inbox Shortcut */}
-          <button
-            onClick={onOpenDevInbox}
-            className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-            title="Local Dev Inbox (view tokens & emails)"
-            aria-label="Open developer inbox"
-          >
-            <Mail className="w-4 h-4" />
-          </button>
-
-          {/* Weekly Report Card Action */}
-          {user && (
+            {/* Online / Offline Sync status pill */}
             <button
-              onClick={onOpenReport}
-              className="p-2 text-slate-400 hover:text-emerald-300 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-              title="Weekly Rescue Report Card"
-              aria-label="Weekly Rescue Report Card"
+              onClick={handleSyncClick}
+              disabled={!isOnline || isSyncing}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full border transition cursor-pointer ${
+                isOnline
+                  ? pendingSyncCount > 0
+                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800 animate-pulse'
+                    : 'bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-800'
+                  : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800'
+              }`}
+              title={isOnline ? (pendingSyncCount > 0 ? `${pendingSyncCount} changes pending sync` : 'Connected') : 'Offline'}
             >
-              <Award className="w-4 h-4" />
+              {isOnline ? (
+                <>
+                  <Wifi className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                  <span className="hidden lg:inline text-[11px]">
+                    {pendingSyncCount > 0 ? `${pendingSyncCount} pending` : 'Synced'}
+                  </span>
+                  {isSyncing && <RefreshCw className="w-3 h-3 animate-spin text-stone-500" />}
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-3 h-3 text-tomato" />
+                  <span className="text-[11px]">Offline</span>
+                </>
+              )}
             </button>
-          )}
 
-          {/* Household Settings */}
-          {user && currentHousehold && (
+            {/* Settings (if not guest or registered) */}
+            {!isGuest && (
+              <button
+                onClick={onOpenSettings}
+                className="p-1.5 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer"
+                title="Household settings & invites"
+                aria-label="Household settings"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Dark Mode Toggle */}
             <button
-              onClick={onOpenSettings}
-              className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-              title="Household Settings & Invites"
-              aria-label="Household Settings"
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-1.5 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer"
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label="Toggle color theme"
             >
-              <Settings className="w-4 h-4" />
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-stone-600" />}
             </button>
-          )}
 
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-            title="Toggle theme"
-            aria-label="Toggle dark mode"
-          >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-slate-400" />}
-          </button>
-
-          {/* Logout */}
-          {user && (
-            <button
-              onClick={logout}
-              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-              title="Log out"
-              aria-label="Log out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          )}
+            {/* Log Out (registered only) */}
+            {!isGuest && (
+              <button
+                onClick={logout}
+                className="p-1.5 text-stone-400 hover:text-tomato rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer"
+                title="Log out"
+                aria-label="Log out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Mobile Bottom Tab Bar (375px responsive) */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-paper/95 dark:bg-stone-950/95 backdrop-blur-md border-t border-stone-200 dark:border-stone-800 h-16 flex items-center justify-around px-2"
+        role="navigation"
+        aria-label="Mobile navigation"
+      >
+        {[
+          { id: 'today', label: 'Today', icon: Sparkles },
+          { id: 'fridge', label: 'Fridge', icon: Layers },
+          { id: 'wins', label: 'Wins', icon: Trophy },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = currentTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onSelectTab(tab.id as any)}
+              className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+                isActive
+                  ? 'text-stone-900 dark:text-stone-100'
+                  : 'text-stone-400 dark:text-stone-500 hover:text-stone-600'
+              }`}
+            >
+              <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.2]' : 'stroke-[1.8]'}`} />
+              <span className={`text-[10px] mt-0.5 ${isActive ? 'font-bold' : 'font-medium'}`}>
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
+    </>
   );
 };

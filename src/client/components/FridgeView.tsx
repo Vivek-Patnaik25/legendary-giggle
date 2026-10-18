@@ -78,7 +78,7 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
   };
 
   return (
-    <div className="space-y-6 pb-56 sm:pb-32">
+    <div className="space-y-6 pb-32 sm:pb-20">
       {/* Header controls: Search & Sort */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
@@ -102,6 +102,15 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenAddItem}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-950 rounded-xl text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer"
+            aria-label="Add item"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Add Item</span>
+          </button>
+
           <div className="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-900 px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-800">
             <Filter className="w-3.5 h-3.5 text-stone-400" />
             <select
@@ -344,18 +353,6 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
           })}
         </div>
       )}
-
-      {/* Floating Add Button for Mobile & Quick Access */}
-      <div className="fixed bottom-20 sm:bottom-8 right-6 z-30">
-        <button
-          onClick={onOpenAddItem}
-          className="flex items-center gap-2 px-4 py-3 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-950 rounded-full shadow-lg shadow-stone-900/15 dark:shadow-black/40 text-sm font-semibold transition active:scale-95 cursor-pointer"
-          aria-label="Add item"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>Add Item</span>
-        </button>
-      </div>
     </div>
   );
 };

@@ -13,6 +13,7 @@ import {
   Layers,
   Trophy,
   ChevronDown,
+  Plus,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -156,6 +157,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
+            {/* Add Item Action (Desktop) */}
+            <button
+              onClick={onOpenAddItem}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-900 text-xs font-semibold rounded-lg shadow-xs transition active:scale-95 cursor-pointer"
+              aria-label="Add item"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Add Item</span>
+            </button>
+
             {/* Household Settings */}
             <button
               onClick={onOpenSettings}
@@ -193,34 +204,60 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Bottom Tab Bar (375px responsive) */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-paper/95 dark:bg-stone-950/95 backdrop-blur-md border-t border-stone-200 dark:border-stone-800 h-16 flex items-center justify-around px-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-paper/95 dark:bg-stone-950/95 backdrop-blur-md border-t border-stone-200 dark:border-stone-800 h-16 flex items-center justify-around px-3"
         role="navigation"
         aria-label="Mobile navigation"
       >
-        {[
-          { id: 'today', label: 'Today', icon: Sparkles },
-          { id: 'fridge', label: 'Fridge', icon: Layers },
-          { id: 'wins', label: 'Wins', icon: Trophy },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = currentTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onSelectTab(tab.id as any)}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
-                isActive
-                  ? 'text-stone-900 dark:text-stone-100'
-                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
-              }`}
-            >
-              <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.2]' : 'stroke-[1.8]'}`} />
-              <span className={`text-[10px] mt-0.5 ${isActive ? 'font-bold' : 'font-medium'}`}>
-                {tab.label}
-              </span>
-            </button>
-          );
-        })}
+        <button
+          onClick={() => onSelectTab('today')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+            currentTab === 'today'
+              ? 'text-stone-900 dark:text-stone-100'
+              : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
+          }`}
+        >
+          <Sparkles className={`w-5 h-5 ${currentTab === 'today' ? 'stroke-[2.2]' : 'stroke-[1.8]'}`} />
+          <span className={`text-[10px] mt-0.5 ${currentTab === 'today' ? 'font-bold' : 'font-medium'}`}>
+            Today
+          </span>
+        </button>
+
+        <button
+          onClick={() => onSelectTab('fridge')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+            currentTab === 'fridge'
+              ? 'text-stone-900 dark:text-stone-100'
+              : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
+          }`}
+        >
+          <Layers className={`w-5 h-5 ${currentTab === 'fridge' ? 'stroke-[2.2]' : 'stroke-[1.8]'}`} />
+          <span className={`text-[10px] mt-0.5 ${currentTab === 'fridge' ? 'font-bold' : 'font-medium'}`}>
+            Fridge
+          </span>
+        </button>
+
+        {/* Centre Primary Add Action in Mobile Bottom Bar */}
+        <button
+          onClick={onOpenAddItem}
+          aria-label="Add item"
+          className="flex items-center justify-center w-10 h-10 -mt-2 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-950 rounded-full shadow-md transition active:scale-95 cursor-pointer shrink-0"
+        >
+          <Plus className="w-5 h-5 stroke-[2.5]" />
+        </button>
+
+        <button
+          onClick={() => onSelectTab('wins')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 transition cursor-pointer ${
+            currentTab === 'wins'
+              ? 'text-stone-900 dark:text-stone-100'
+              : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
+          }`}
+        >
+          <Trophy className={`w-5 h-5 ${currentTab === 'wins' ? 'stroke-[2.2]' : 'stroke-[1.8]'}`} />
+          <span className={`text-[10px] mt-0.5 ${currentTab === 'wins' ? 'font-bold' : 'font-medium'}`}>
+            Wins
+          </span>
+        </button>
       </nav>
     </>
   );

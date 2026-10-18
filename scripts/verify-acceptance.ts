@@ -78,12 +78,82 @@ async function auditAccessibility(page: any, viewName: string) {
   console.log(`  ✓ ${viewName}: 0 WCAG AA / contrast violations`);
 }
 
-async function main() {
-  console.log('=== Starting Pantry Rescue Acceptance Checks (v4) ===\n');
+async function verifyClearanceForPage(page: any, viewName: string, viewportName: string, vpWidth: number, vpHeight: number) {
+  // Locate the Add button visible on this view/viewport
+  const addBtn = page.locator('button[aria-label="Add item"], button[aria-label="Add item to fridge"]').filter({ visible: true }).first();
+  const isAddVisible = await addBtn.isVisible();
+  if (!isAddVisible) {
+    throw new Error(`Add button not visible on ${viewName} (${viewportName})`);
+  }
+  const addBox = await addBtn.boundingBox();
+  if (!addBox) {
+    throw new Error(`Add button has no bounding box on ${viewName} (${viewportName})`);
+  }
+  console.log(`  [${viewName} - ${viewportName}] Add button box: [x:${addBox.x.toFixed(0)}, y:${addBox.y.toFixed(0)}, w:${addBox.width.toFixed(0)}, h:${addBox.height.toFixed(0)}]`);
 
-  const v4Dir = path.resolve(process.cwd(), 'docs/screens/v4');
-  const seqDir = path.join(v4Dir, 'first-run-sequence');
-  fs.mkdirSync(v4Dir, { recursive: true });
+  // Target every "Use" and "Cook" button on the page
+  const actionBtns = page.locator('button:has-text("Use"), button:has-text("Cook")');
+  const count = await actionBtns.count();
+  if (count === 0) {
+    throw new Error(`No Use or Cook buttons found on ${viewName} (${viewportName}) to test clearance!`);
+  }
+
+  for (let i = 0; i < count; i++) {
+    const btn = actionBtns.nth(i);
+    const btnText = (await btn.innerText()).trim().replace(/\s+/g, ' ');
+
+    // Scroll button cleanly into center of view
+    await btn.evaluate((el: HTMLElement) => el.scrollIntoView({ block: 'center', inline: 'center' }));
+    await page.waitForTimeout(80);
+
+    const btnBox = await btn.boundingBox();
+    if (!btnBox) {
+      throw new Error(`Button "${btnText}" #${i + 1} has no bounding box on ${viewName} (${viewportName})`);
+    }
+
+    // Strictly enforce positive coordinates - do NOT report negative coordinates as a pass!
+    if (btnBox.y < 0) {
+      throw new Error(`Button "${btnText}" #${i + 1} has negative y coordinate (${btnBox.y.toFixed(0)}px) on ${viewName} (${viewportName})! Must be visible in active viewport.`);
+    }
+    if (btnBox.x < 0) {
+      throw new Error(`Button "${btnText}" #${i + 1} has negative x coordinate (${btnBox.x.toFixed(0)}px) on ${viewName} (${viewportName})! Must be visible in active viewport.`);
+    }
+    if (btnBox.y + btnBox.height > vpHeight) {
+      throw new Error(`Button "${btnText}" #${i + 1} extends below viewport bottom: ${(btnBox.y + btnBox.height).toFixed(0)}px > ${vpHeight}px!`);
+    }
+
+    // Re-verify current add button position
+    const currentAddBox = await addBtn.boundingBox();
+    if (!currentAddBox) {
+      throw new Error(`Add button vanished while testing button "${btnText}" #${i + 1}`);
+    }
+
+    // Strict intersection test
+    const intersects = !(
+      btnBox.x + btnBox.width <= currentAddBox.x ||
+      btnBox.x >= currentAddBox.x + currentAddBox.width ||
+      btnBox.y + btnBox.height <= currentAddBox.y ||
+      btnBox.y >= currentAddBox.y + currentAddBox.height
+    );
+
+    if (intersects) {
+      throw new Error(
+        `Collision detected on ${viewName} (${viewportName})! Button "${btnText}" #${i + 1} at [x:${btnBox.x.toFixed(0)}, y:${btnBox.y.toFixed(0)}, w:${btnBox.width.toFixed(0)}, h:${btnBox.height.toFixed(0)}] intersects Add button at [x:${currentAddBox.x.toFixed(0)}, y:${currentAddBox.y.toFixed(0)}, w:${currentAddBox.width.toFixed(0)}, h:${currentAddBox.height.toFixed(0)}]`
+      );
+    }
+
+    console.log(
+      `    ✓ Button "${btnText}" #${i + 1}: box=[x:${btnBox.x.toFixed(0)}, y:${btnBox.y.toFixed(0)}, w:${btnBox.width.toFixed(0)}, h:${btnBox.height.toFixed(0)}] — CLEAR of Add button [x:${currentAddBox.x.toFixed(0)}, y:${currentAddBox.y.toFixed(0)}]`
+    );
+  }
+}
+
+async function main() {
+  console.log('=== Starting Pantry Rescue Acceptance Checks (v5) ===\n');
+
+  const v5Dir = path.resolve(process.cwd(), 'docs/screens/v5');
+  const seqDir = path.join(v5Dir, 'first-run-sequence');
+  fs.mkdirSync(v5Dir, { recursive: true });
   fs.mkdirSync(seqDir, { recursive: true });
 
   // 1. Initialize test database
@@ -101,8 +171,8 @@ async function main() {
     // ----------------------------------------------------
     // CHECK 1: Record 30-Second First-Run Flow Video (WebM)
     // ----------------------------------------------------
-    console.log('\n--- Running Check 1: Record First-Run Flow (docs/screens/v4/first-run.webm) ---');
-    const rawVideoDir = path.join(v4Dir, 'raw-video');
+    console.log('\n--- Running Check 1: Record First-Run Flow (docs/screens/v5/first-run.webm) ---');
+    const rawVideoDir = path.join(v5Dir, 'raw-video');
     fs.mkdirSync(rawVideoDir, { recursive: true });
 
     const recContext = await browser.newContext({
@@ -179,8 +249,8 @@ async function main() {
     await recPage.close();
     await recContext.close();
 
-    // Save video file to docs/screens/v4/first-run.webm directly
-    const destWebm = path.join(v4Dir, 'first-run.webm');
+    // Save video file to docs/screens/v5/first-run.webm directly
+    const destWebm = path.join(v5Dir, 'first-run.webm');
     if (videoObj) {
       const videoPath = await videoObj.path();
       if (fs.existsSync(videoPath)) {
@@ -246,9 +316,9 @@ async function main() {
     `).run(household.id);
 
     // ----------------------------------------------------
-    // CHECK 2: Full-Flow Screenshot Capture into docs/screens/v4/
+    // CHECK 2: Full-Flow Screenshot Capture into docs/screens/v5/
     // ----------------------------------------------------
-    console.log('\n--- Running Check 2: Screenshot Capture (docs/screens/v4/) ---');
+    console.log('\n--- Running Check 2: Screenshot Capture (docs/screens/v5/) ---');
 
     const viewports = [
       { name: 'desktop', width: 1280, height: 800 },
@@ -279,7 +349,7 @@ async function main() {
         }
 
         // 1. Capture Today View
-        await page.screenshot({ path: path.join(v4Dir, `${vp.name}-${theme}-today.png`), fullPage: false });
+        await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-today.png`), fullPage: false });
         console.log(`  ✓ Saved ${vp.name}-${theme}-today.png`);
 
         // 2. Capture Fridge View
@@ -289,7 +359,7 @@ async function main() {
           await page.locator('header nav button:has-text("Fridge")').click();
         }
         await page.waitForSelector('text=Greek Yogurt', { timeout: 5000 });
-        await page.screenshot({ path: path.join(v4Dir, `${vp.name}-${theme}-fridge.png`), fullPage: false });
+        await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-fridge.png`), fullPage: false });
         console.log(`  ✓ Saved ${vp.name}-${theme}-fridge.png`);
 
         // 3. Capture Wins View
@@ -299,7 +369,7 @@ async function main() {
           await page.locator('header nav button:has-text("Wins")').click();
         }
         await page.waitForSelector('text=Achievements', { timeout: 5000 });
-        await page.screenshot({ path: path.join(v4Dir, `${vp.name}-${theme}-wins.png`), fullPage: false });
+        await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-wins.png`), fullPage: false });
         console.log(`  ✓ Saved ${vp.name}-${theme}-wins.png`);
 
         // 4. Capture Weekly Report Modal (from Wins view)
@@ -307,18 +377,18 @@ async function main() {
         if (await reportBtn.isVisible()) {
           await reportBtn.click();
           await page.waitForSelector('text=Sir Expiry\'s dispatch', { timeout: 5000 });
-          await page.screenshot({ path: path.join(v4Dir, `${vp.name}-${theme}-modal-report.png`), fullPage: false });
+          await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-modal-report.png`), fullPage: false });
           console.log(`  ✓ Saved ${vp.name}-${theme}-modal-report.png`);
           await page.keyboard.press('Escape');
           await page.waitForTimeout(200);
         }
 
         // 5. Capture Add Item Modal
-        const openAdd = page.locator('button[aria-label="Add item to fridge"], button[aria-label="Add item"]').first();
+        const openAdd = page.locator('button[aria-label="Add item to fridge"], button[aria-label="Add item"]').filter({ visible: true }).first();
         if (await openAdd.isVisible()) {
           await openAdd.click();
           await page.waitForSelector('text=Quick Presets', { timeout: 5000 });
-          await page.screenshot({ path: path.join(v4Dir, `${vp.name}-${theme}-modal-add.png`), fullPage: false });
+          await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-modal-add.png`), fullPage: false });
           console.log(`  ✓ Saved ${vp.name}-${theme}-modal-add.png`);
           await page.keyboard.press('Escape');
           await page.waitForTimeout(200);
@@ -336,7 +406,7 @@ async function main() {
         if (await recipeCard.isVisible()) {
           await recipeCard.click();
           await page.waitForSelector('text=Ingredients', { timeout: 5000 });
-          await page.screenshot({ path: path.join(v4Dir, `${vp.name}-${theme}-modal-recipe.png`), fullPage: false });
+          await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-modal-recipe.png`), fullPage: false });
           console.log(`  ✓ Saved ${vp.name}-${theme}-modal-recipe.png`);
           await page.keyboard.press('Escape');
         }
@@ -381,7 +451,7 @@ async function main() {
       await auditAccessibility(page, `Fridge View (${theme})`);
 
       // 4. Audit Add Item Modal
-      const addBtn = page.locator('button[aria-label="Add item"]').first();
+      const addBtn = page.locator('button[aria-label="Add item"]').filter({ visible: true }).first();
       await addBtn.click();
       await page.waitForSelector('text=Quick Presets');
       await auditAccessibility(page, `Add Item Modal (${theme})`);
@@ -408,66 +478,40 @@ async function main() {
     console.log('\n✓ Comprehensive Accessibility & Contrast Audit passed (0 WCAG AA violations)');
 
     // ----------------------------------------------------
-    // CHECK 4: Mobile Viewport Clearance & Keyboard Navigation Test
+    // CHECK 4: Strict Button Clearance (Today & Fridge at 375px and 1280px) & Keyboard Nav
     // ----------------------------------------------------
-    console.log('\n--- Running Check 4: Mobile Viewport Clearance (375px) & Keyboard Navigation ---');
-    const mobileCtx = await browser.newContext({ viewport: { width: 375, height: 812 } });
-    await mobileCtx.addCookies(sessionCookies);
-    const mPage = await mobileCtx.newPage();
+    console.log('\n--- Running Check 4: Strict Clearance Audit (Today & Fridge at 375px and 1280px) ---');
 
-    // 1. Check Today view mobile clearance
-    await mPage.goto(baseUrl, { waitUntil: 'networkidle' });
-    await mPage.waitForSelector('text=Expiring soon');
-    await mPage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await mPage.waitForTimeout(500);
+    const clearanceViewports = [
+      { name: 'Mobile (375x812)', width: 375, height: 812 },
+      { name: 'Desktop (1280x800)', width: 1280, height: 800 },
+    ];
 
-    const todayUseBtns = mPage.locator('button:has-text("Use")');
-    const lastTodayUse = todayUseBtns.last();
-    const todayUseBox = await lastTodayUse.boundingBox();
-    const todayAddBtn = mPage.locator('button[aria-label="Add item to fridge"]');
-    const todayAddBox = await todayAddBtn.boundingBox();
+    for (const vp of clearanceViewports) {
+      console.log(`\n  [Viewport: ${vp.name}]`);
+      const vpContext = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
+      await vpContext.addCookies(sessionCookies);
+      const vpPage = await vpContext.newPage();
 
-    if (todayUseBox && todayAddBox) {
-      const isOverlapping = !(
-        todayUseBox.x + todayUseBox.width < todayAddBox.x ||
-        todayUseBox.x > todayAddBox.x + todayAddBox.width ||
-        todayUseBox.y + todayUseBox.height < todayAddBox.y ||
-        todayUseBox.y > todayAddBox.y + todayAddBox.height
-      );
-      if (isOverlapping) {
-        throw new Error('Mobile clearance failure: floating Add button overlaps Use button on Today view!');
+      // 1. Audit Today View
+      await vpPage.goto(baseUrl, { waitUntil: 'networkidle' });
+      await vpPage.waitForSelector('text=Cook tonight');
+      await verifyClearanceForPage(vpPage, 'Today View', vp.name, vp.width, vp.height);
+
+      // 2. Audit Fridge View
+      if (vp.width < 768) {
+        await vpPage.locator('nav[aria-label="Mobile navigation"] button:has-text("Fridge")').click();
+      } else {
+        await vpPage.locator('header nav button:has-text("Fridge")').click();
       }
-      console.log(`  ✓ Today view mobile clearance verified: Use button bottom (${(todayUseBox.y + todayUseBox.height).toFixed(0)}px) does not overlap Add button top (${todayAddBox.y.toFixed(0)}px)`);
+      await vpPage.waitForSelector('text=Greek Yogurt');
+      await verifyClearanceForPage(vpPage, 'Fridge View', vp.name, vp.width, vp.height);
+
+      await vpContext.close();
     }
-
-    // 2. Check Fridge view mobile clearance
-    await mPage.locator('nav[aria-label="Mobile navigation"] button:has-text("Fridge")').click();
-    await mPage.waitForSelector('text=Greek Yogurt');
-    await mPage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await mPage.waitForTimeout(500);
-
-    const fridgeUseBtns = mPage.locator('button:has-text("Use")');
-    const lastFridgeUse = fridgeUseBtns.last();
-    const fridgeUseBox = await lastFridgeUse.boundingBox();
-    const fridgeAddBtn = mPage.locator('button[aria-label="Add item"]');
-    const fridgeAddBox = await fridgeAddBtn.boundingBox();
-
-    if (fridgeUseBox && fridgeAddBox) {
-      const isOverlapping = !(
-        fridgeUseBox.x + fridgeUseBox.width < fridgeAddBox.x ||
-        fridgeUseBox.x > fridgeAddBox.x + fridgeAddBox.width ||
-        fridgeUseBox.y + fridgeUseBox.height < fridgeAddBox.y ||
-        fridgeUseBox.y > fridgeAddBox.y + fridgeAddBox.height
-      );
-      if (isOverlapping) {
-        throw new Error('Mobile clearance failure: floating Add button overlaps Use button on Fridge view!');
-      }
-      console.log(`  ✓ Fridge view mobile clearance verified: Use button bottom (${(fridgeUseBox.y + fridgeUseBox.height).toFixed(0)}px) does not overlap Add button top (${fridgeAddBox.y.toFixed(0)}px)`);
-    }
-
-    await mobileCtx.close();
 
     // 3. Desktop Keyboard Navigation
+    console.log('\n  [Desktop Keyboard Navigation]');
     const kbContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     await kbContext.addCookies(sessionCookies);
     const kbPage = await kbContext.newPage();
@@ -495,7 +539,7 @@ async function main() {
       }
       console.log('  ✓ Modal closed via keyboard Escape');
     }
-    console.log('✓ Keyboard navigation & mobile clearance passed');
+    console.log('✓ Keyboard navigation & strict clearance passed');
     await kbContext.close();
 
     // ----------------------------------------------------
@@ -529,7 +573,7 @@ async function main() {
     console.log('  ✓ Fridge View clean (no [object, undefined, NaN, &amp;)');
 
     // 4. Scan Add Item Modal
-    const addModalBtn = scanPage.locator('button[aria-label="Add item"]').first();
+    const addModalBtn = scanPage.locator('button[aria-label="Add item"]').filter({ visible: true }).first();
     await addModalBtn.click();
     await scanPage.waitForSelector('text=Quick Presets');
     await scanPageForForbiddenTokens(scanPage, 'Add Item Modal');
@@ -584,18 +628,18 @@ async function main() {
     // ----------------------------------------------------
     console.log('\n=== ALL ACCEPTANCE CHECKS PASSED SUCCESSFULLY ===\n');
 
-    console.log('--- Output File List (docs/screens/v4/): ---');
-    const files = fs.readdirSync(v4Dir).filter(f => !fs.statSync(path.join(v4Dir, f)).isDirectory());
+    console.log('--- Output File List (docs/screens/v5/): ---');
+    const files = fs.readdirSync(v5Dir).filter(f => !fs.statSync(path.join(v5Dir, f)).isDirectory());
     for (const file of files) {
-      const stats = fs.statSync(path.join(v4Dir, file));
-      console.log(`  - docs/screens/v4/${file} (${(stats.size / 1024).toFixed(1)} KB)`);
+      const stats = fs.statSync(path.join(v5Dir, file));
+      console.log(`  - docs/screens/v5/${file} (${(stats.size / 1024).toFixed(1)} KB)`);
     }
 
     const seqFiles = fs.readdirSync(seqDir);
-    console.log('\n--- First-Run Flow Sequence (docs/screens/v4/first-run-sequence/): ---');
+    console.log('\n--- First-Run Flow Sequence (docs/screens/v5/first-run-sequence/): ---');
     for (const sf of seqFiles) {
       const stats = fs.statSync(path.join(seqDir, sf));
-      console.log(`  - docs/screens/v4/first-run-sequence/${sf} (${(stats.size / 1024).toFixed(1)} KB)`);
+      console.log(`  - docs/screens/v5/first-run-sequence/${sf} (${(stats.size / 1024).toFixed(1)} KB)`);
     }
   } finally {
     await browser.close();

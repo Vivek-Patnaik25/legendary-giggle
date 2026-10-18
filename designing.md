@@ -575,6 +575,48 @@ Request #4:
 - Mobile Light & Dark: `mobile-light-today.png`, `mobile-dark-today.png`, `mobile-light-fridge.png`, `mobile-dark-fridge.png`, `mobile-light-wins.png`, `mobile-dark-wins.png`, `mobile-light-modal-recipe.png`, `mobile-dark-modal-recipe.png`, `mobile-light-modal-report.png`, `mobile-dark-modal-report.png`
 - Step-by-Step Sequence: 8 screenshots in `docs/screens/v4/first-run-sequence/01-cold-open.png` to `08-weekly-postcard.png`.
 
+---
+
+## 8. Mobile Clearance Resolution & Honest Button Clearance Verification (v5)
+
+### 8.1 Design Decision: Docked Navigation Add Action & Removal of Floating FABs
+- **Decision**: Integrated the primary Add button into the mobile bottom navigation bar (`Navbar.tsx`) as an elevated, docked centre action button (`w-10 h-10 -mt-2 rounded-full`), removed the floating FAB from `TodayView.tsx` and `FridgeView.tsx`, and provided standard in-flow Add buttons in the desktop header and Fridge toolbar.
+- **Rationale**:
+  1. **Zero Overlap Guarantee**: A floating action button (FAB) hovers over the scrollable content canvas, creating inevitable collisions when items pass underneath it. By docking the Add button inside the persistent navigation bar (`h-16`) at `y = 757px` on mobile and inside the top header (`h-15`) at `y = 16px` on desktop, the button lives entirely outside the scroll container.
+  2. **Ergonomic Thumb Reach**: On mobile devices, a centre button in the bottom tab bar is immediately accessible to one-handed thumb interaction without covering cards or list items.
+  3. **Information Architecture on Today**: `TodayView` is an actionable daily digest (rescuing expiring items with "Use" and cooking tonight with "Cook"). Adding groceries is an inventory action; having an overlapping FAB on Today added visual noise. With the bottom nav bar, users can add an item from anywhere instantly.
+  4. **Desktop Restraint**: On 1280px desktop viewports, floating FABs are an anti-pattern. Anchoring the action in the top header and Fridge toolbar aligns with Linear/Stripe design standards.
+
+### 8.2 Recommendation Subtitle Parity: Expiring vs. Closest Matches
+- **Implementation**: In `TodayView.tsx`, evaluated `topRecipeUsesExpiring = rescueRecipes.length > 0 && (rescueRecipes[0]?.urgentItemsUsedCount ?? 0) > 0`.
+- **Wording**:
+  - When the top recipe uses at least one expiring item: rendered `"Ranked by expiring items"`.
+  - When no recipe uses an expiring item or no expiring items remain: rendered `"Closest matches from your pantry"`.
+
+### 8.3 Honest Button Clearance Audit
+- **Strict Methodology**:
+  - For every visible `Use` and `Cook` button on `Today View` and `Fridge View` across both `Mobile (375x812)` and `Desktop (1280x800)`:
+  - Scrolled the button into view via `scrollIntoView({ block: 'center', inline: 'center' })`.
+  - Enforced that button bounding box coordinates are strictly positive (`btnBox.y >= 0`, `btnBox.x >= 0`) and fully contained within the viewport (`btnBox.y + btnBox.height <= viewportHeight`).
+  - Compared the bounding box against the active Add button's bounding box and asserted zero intersection.
+- **Results**:
+  - **Mobile Today View (375x812)**: Add button at `[x:219, y:757, w:40, h:40]`. All 3 "Use" buttons (`y ~ 368-390px`) and 3 "Cook" buttons (`y ~ 389-633px`) strictly clear (clearance gap > 120px).
+  - **Mobile Fridge View (375x812)**: Add button at `[x:219, y:757, w:40, h:40]`. All 6 "Use" buttons (`y ~ 382-638px`) strictly clear (clearance gap > 110px).
+  - **Desktop Today View (1280x800)**: Add button at `[x:1023, y:16, w:97, h:28]`. All 3 "Use" buttons (`y ~ 318-385px`) and 3 "Cook" buttons (`y ~ 669px`) strictly clear of header Add button.
+  - **Desktop Fridge View (1280x800)**: Add button at `[x:1023, y:16, w:97, h:28]`. All 6 "Use" buttons (`y ~ 335-522px`) strictly clear of header Add button.
+
+### 8.4 Acceptance Suite V5 Artifact Listing (`docs/screens/v5/`)
+- `first-run.webm`: 28.52s authentic VP9 WebM recording (2,911.9 KB, verified by ffprobe).
+- 24 Screenshots captured covering light and dark themes on both desktop (1280x800) and mobile (375x812):
+  - Today: `desktop-light-today.png`, `desktop-dark-today.png`, `mobile-light-today.png`, `mobile-dark-today.png`
+  - Fridge: `desktop-light-fridge.png`, `desktop-dark-fridge.png`, `mobile-light-fridge.png`, `mobile-dark-fridge.png`
+  - Wins: `desktop-light-wins.png`, `desktop-dark-wins.png`, `mobile-light-wins.png`, `mobile-dark-wins.png`
+  - Add Modal: `desktop-light-modal-add.png`, `desktop-dark-modal-add.png`, `mobile-light-modal-add.png`, `mobile-dark-modal-add.png`
+  - Recipe Modal: `desktop-light-modal-recipe.png`, `desktop-dark-modal-recipe.png`, `mobile-light-modal-recipe.png`, `mobile-dark-modal-recipe.png`
+  - Weekly Report Modal: `desktop-light-modal-report.png`, `desktop-dark-modal-report.png`, `mobile-light-modal-report.png`, `mobile-dark-modal-report.png`
+- Step-by-Step Sequence: 8 screenshots in `docs/screens/v5/first-run-sequence/01-cold-open.png` to `08-weekly-postcard.png`.
+
+
 
 
 

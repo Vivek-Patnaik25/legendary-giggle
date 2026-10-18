@@ -74,8 +74,11 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
     }
   }
 
+  const topRecipeUsesExpiring =
+    rescueRecipes.length > 0 && (rescueRecipes[0]?.urgentItemsUsedCount ?? 0) > 0;
+
   return (
-    <div className="space-y-8 pb-56 sm:pb-32">
+    <div className="space-y-8 pb-32 sm:pb-20">
       {/* 1. Restrained Sir Expiry Header (Touchpoint 1 of 3) */}
       <section className="bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 sm:p-6 transition-all">
         <div className="flex items-center gap-4 sm:gap-5">
@@ -222,7 +225,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
             Cook tonight
           </h2>
           <span className="text-xs text-stone-600 dark:text-stone-400">
-            Ranked by expiring items
+            {topRecipeUsesExpiring ? 'Ranked by expiring items' : 'Closest matches from your pantry'}
           </span>
         </div>
 
@@ -291,16 +294,6 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
           </div>
         )}
       </section>
-
-      {/* Single Floating Primary Add Action Button */}
-      <button
-        onClick={onOpenAddItem}
-        className="fixed bottom-20 md:bottom-8 right-5 sm:right-8 z-40 p-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-100 dark:text-stone-900 rounded-full shadow-xl transition active:scale-95 flex items-center gap-2 cursor-pointer"
-        aria-label="Add item to fridge"
-      >
-        <Plus className="w-5 h-5 stroke-[2.5]" />
-        <span className="text-xs font-bold pr-1 hidden sm:inline">Add item</span>
-      </button>
     </div>
   );
 };

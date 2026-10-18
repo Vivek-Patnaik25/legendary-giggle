@@ -2,7 +2,7 @@ import React from 'react';
 import { usePantry } from '../context/PantryContext.js';
 import { useAuth } from '../context/AuthContext.js';
 import { AccessibleModal } from './AccessibleModal.js';
-import { cleanText } from '../utils/text.js';
+import { cleanText, formatQuantityWithUnit } from '../utils/text.js';
 import { ChefHat, Check, Plus, Utensils, Clock, Users, X } from 'lucide-react';
 
 interface RecipeModalProps {
@@ -28,15 +28,15 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
     onClose();
   };
 
-  // Check if an ingredient is missing using the recipe's exact missingIngredients array
-  const isIngredientMissing = (ingName: string) => {
-    if (!recipe.missingIngredients || !Array.isArray(recipe.missingIngredients)) {
+  // Check if an ingredient is matched to current fridge inventory
+  const isIngredientInPantry = (ingName: string) => {
+    if (!recipe.usedPantryItems || !Array.isArray(recipe.usedPantryItems)) {
       return false;
     }
     const cleanIng = ingName.toLowerCase().trim();
-    return recipe.missingIngredients.some((m: any) => {
-      const cleanMissing = (typeof m === 'string' ? m : m.name || '').toLowerCase().trim();
-      return cleanMissing === cleanIng || cleanMissing.includes(cleanIng) || cleanIng.includes(cleanMissing);
+    return recipe.usedPantryItems.some((u: any) => {
+      const cleanUsed = (typeof u === 'string' ? u : u.name || '').toLowerCase().trim();
+      return cleanUsed === cleanIng || cleanUsed.includes(cleanIng) || cleanIng.includes(cleanUsed);
     });
   };
 
@@ -82,17 +82,16 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
           <div className="flex items-center justify-between">
             <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
               <ChefHat className="w-4 h-4 text-stone-500" />
-              <span>Ingredients</span>
+              <span>Ingredients ({recipe.ingredients?.length || 0})</span>
             </h4>
             <span className="text-[11px] text-stone-500">
-              {recipe.usedPantryItems?.length || 0} available in your fridge
+              {recipe.usedPantryItems?.length || 0} in fridge &bull; {recipe.missingIngredients?.length || 0} needed
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
             {recipe.ingredients.map((ing: any, idx: number) => {
-              const missing = isIngredientMissing(ing.name);
-              const inPantry = !missing;
+              const inPantry = isIngredientInPantry(ing.name);
 
               return (
                 <div
@@ -112,7 +111,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
                     <span className="truncate">{cleanText(ing.name)}</span>
                   </div>
                   <span className="text-[11px] text-stone-400 shrink-0 font-normal">
-                    {ing.quantity} {ing.unit}
+                    {formatQuantityWithUnit(ing.quantity, ing.unit)}
                   </span>
                 </div>
               );

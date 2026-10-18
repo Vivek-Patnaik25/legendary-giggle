@@ -151,12 +151,12 @@ export function calculateHouseholdScoreboard(householdId: string): ScoreboardDat
     streakWeeks = Math.min(12, streakWeeks + Math.floor(rescuedCount / 3));
   }
 
-  // Recent 10 events
+  // Recent 10 events (excluding sub-gram 1g micro entries)
   const recentEvents = db.prepare(`
     SELECT se.*, u.display_name as user_name
     FROM scoreboard_events se
     JOIN users u ON se.user_id = u.id
-    WHERE se.household_id = ?
+    WHERE se.household_id = ? AND NOT (LOWER(se.unit) = 'g' AND se.quantity <= 1)
     ORDER BY se.created_at DESC
     LIMIT 10
   `).all(householdId);

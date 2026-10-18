@@ -12,6 +12,7 @@ import {
   Share2,
   Calendar,
 } from 'lucide-react';
+import { formatQuantityWithUnit } from '../utils/text.js';
 
 interface ScoreboardViewProps {
   onOpenReport: () => void;
@@ -168,29 +169,39 @@ export const ScoreboardView: React.FC<ScoreboardViewProps> = ({ onOpenReport }) 
       </section>
 
       {/* 4. Activity Audit Trail */}
-      {scoreboard?.recentEvents && scoreboard.recentEvents.length > 0 && (
-        <section className="space-y-3 pt-4">
-          <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span>Recent Activity Audit Trail</span>
-          </h3>
-          <div className="rounded-xl border border-slate-800 bg-slate-800/40 divide-y divide-slate-800 overflow-hidden text-xs">
-            {scoreboard.recentEvents.map((evt: any) => (
-              <div key={evt.id} className="p-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <span className={`w-2 h-2 rounded-full ${evt.event_type === 'rescued' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                  <span className="text-slate-200">
-                    <strong>{evt.user_name || 'Member'}</strong>{' '}
-                    {evt.event_type === 'rescued' ? 'rescued' : 'marked as waste'}{' '}
-                    <strong>{evt.quantity} {evt.unit}</strong>
-                  </span>
+      {(() => {
+        const visibleEvents = (scoreboard?.recentEvents || []).filter((evt: any) => {
+          const isGram = (evt.unit || '').toLowerCase().trim() === 'g';
+          const qty = Number(evt.quantity) || 0;
+          return !(isGram && qty <= 1);
+        });
+
+        if (visibleEvents.length === 0) return null;
+
+        return (
+          <section className="space-y-3 pt-4">
+            <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-slate-400" />
+              <span>Recent Activity Audit Trail</span>
+            </h3>
+            <div className="rounded-xl border border-slate-800 bg-slate-800/40 divide-y divide-slate-800 overflow-hidden text-xs">
+              {visibleEvents.map((evt: any) => (
+                <div key={evt.id} className="p-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-2 h-2 rounded-full ${evt.event_type === 'rescued' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                    <span className="text-slate-200">
+                      <strong>{evt.user_name || 'Member'}</strong>{' '}
+                      {evt.event_type === 'rescued' ? 'rescued' : 'marked as waste'}{' '}
+                      <strong>{formatQuantityWithUnit(evt.quantity, evt.unit)}</strong>
+                    </span>
+                  </div>
+                  <span className="text-slate-500 shrink-0">{evt.date}</span>
                 </div>
-                <span className="text-slate-500 shrink-0">{evt.date}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+              ))}
+            </div>
+          </section>
+        );
+      })()}
     </div>
   );
 };

@@ -351,6 +351,21 @@ The redesigned UI was tested and validated end-to-end via Playwright and Axe Cor
      - A contextual dropdown menu with unambiguous labeled actions: "Freeze to Preserve" / "Move to Fridge" (Snowflake), "Claim for Me" / "Unclaim Item" (Bookmark), and "Discard (Waste)" (Trash2 with rose styling).
    - *Verification:* Verified on mobile (375px) and desktop layouts. All actions close the menu immediately upon selection or backdrop dismissal.
 
+### 3.12 Design Review Fixes: Copy, Units & Recipe Data Parity (Group 3)
+
+8. **Pluralisation & Unit Capitalization ("1 piece", "2 pieces", "L"):**
+   - *Fix:* Enhanced `formatUnit` and `formatQuantityWithUnit` in `src/client/utils/text.ts` to strictly format discrete counts ("1 piece" vs "2 pieces", "1 clove" vs "2 cloves", "1 tin" vs "2 tins", "1 slice" vs "2 slices") and standardize litres to uppercase `"L"` ("1 L", "2 L").
+   - *Parity:* Integrated `formatQuantityWithUnit` across `TodayView.tsx`, `FridgeView.tsx`, `WinsView.tsx`, `RecipeModal.tsx`, and `AddItemModal.tsx`.
+9. **Elimination of "1 g" & Sub-Gram Activity Entries:**
+   - *Root Cause:* Minor culinary actions or micro quantity adjustments recorded entries such as "rescued 1 g" in the scoreboard activity audit trail, which looked cluttered and unhelpful.
+   - *Fix:* Added server-side SQL exclusion (`WHERE NOT (LOWER(se.unit) = 'g' AND se.quantity <= 1)`) in `src/server/services/gamification.ts`, plus frontend defensive filtering in `WinsView.tsx` and `ScoreboardView.tsx`. Quantities are formatted cleanly with proper unit labels.
+10. **Recipe Ingredient List and Instruction Parity:**
+   - *Audit:* Evaluated all 10 recipes in `src/server/data/offlineRecipes.ts`. Removed undeclared ingredients from instructions (e.g., spinach from frittata, ginger and sesame oil from stir-fry, celery and broth from minestrone, carrots from sheet pan chicken, rice from chickpea curry, tomato paste from chili, lemon juice from aubergine). Added missing recipe ingredients (e.g. basil in pasta bake, cilantro in shakshuka, oats in pancakes) with accurate units and amounts.
+   - *Verification:* Created automated vitest test in `tests/client/text-rendering.test.ts` verifying that every single recipe ingredient is accounted for in its instruction steps.
+11. **Card-to-Modal Count & Status Parity ("Uses N from your fridge" and "Needs M"):**
+   - *Root Cause:* If an ingredient was marked `optional: true` and missing, it was excluded from `missingIngredients` in `recipeEngine.ts`, creating a count mismatch between the card's `missingCount` and the modal checklist.
+   - *Fix:* Updated `rankRescueRecipes` in `src/server/services/recipeEngine.ts` to ensure every ingredient in `recipe.ingredients` is either in `usedPantryItems` or in `missingIngredients`. Thus, `usedPantryItems.length + missingIngredients.length === recipe.ingredients.length` holds universally. Recipe cards display `Uses N from your fridge` and `Needs M: [ingredients]`, matching the modal's `N in fridge • M needed` breakdown.
+
 ---
 
 ## 4. Load Test Results & Known Gaps

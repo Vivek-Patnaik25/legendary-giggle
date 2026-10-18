@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePantry } from '../context/PantryContext.js';
 import { useAuth } from '../context/AuthContext.js';
-import { pluralize } from '../utils/text.js';
+import { pluralize, formatQuantityWithUnit } from '../utils/text.js';
 import {
   Trophy,
   Flame,
@@ -252,38 +252,48 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
       </section>
 
       {/* Audit Trail */}
-      {scoreboard?.recentEvents && scoreboard.recentEvents.length > 0 && (
-        <section className="space-y-3 pt-4 border-t border-stone-200 dark:border-stone-800">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-stone-400" />
-            <h3 className="font-serif text-base font-bold text-stone-900 dark:text-stone-100">
-              Recent Activity
-            </h3>
-          </div>
+      {(() => {
+        const visibleEvents = (scoreboard?.recentEvents || []).filter((evt: any) => {
+          const isGram = (evt.unit || '').toLowerCase().trim() === 'g';
+          const qty = Number(evt.quantity) || 0;
+          return !(isGram && qty <= 1);
+        });
 
-          <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/60 divide-y divide-stone-100 dark:divide-stone-800/80 text-xs">
-            {scoreboard.recentEvents.map((evt: any) => (
-              <div key={evt.id} className="p-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${
-                    evt.event_type === 'rescued' ? 'bg-emerald-500' : 'bg-tomato'
-                  }`} />
-                  <span className="text-stone-700 dark:text-stone-300 truncate">
-                    <strong className="font-semibold text-stone-900 dark:text-stone-100">
-                      {evt.user_name || 'Member'}
-                    </strong>{' '}
-                    {evt.event_type === 'rescued' ? 'rescued' : 'discarded'}{' '}
-                    <strong className="font-semibold text-stone-900 dark:text-stone-100">
-                      {evt.quantity} {evt.unit}
-                    </strong>
-                  </span>
+        if (visibleEvents.length === 0) return null;
+
+        return (
+          <section className="space-y-3 pt-4 border-t border-stone-200 dark:border-stone-800">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-stone-400" />
+              <h3 className="font-serif text-base font-bold text-stone-900 dark:text-stone-100">
+                Recent Activity
+              </h3>
+            </div>
+
+            <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/60 divide-y divide-stone-100 dark:divide-stone-800/80 text-xs">
+              {visibleEvents.map((evt: any) => (
+                <div key={evt.id} className="p-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${
+                      evt.event_type === 'rescued' ? 'bg-emerald-500' : 'bg-tomato'
+                    }`} />
+                    <span className="text-stone-700 dark:text-stone-300 truncate">
+                      <strong className="font-semibold text-stone-900 dark:text-stone-100">
+                        {evt.user_name || 'Member'}
+                      </strong>{' '}
+                      {evt.event_type === 'rescued' ? 'rescued' : 'discarded'}{' '}
+                      <strong className="font-semibold text-stone-900 dark:text-stone-100">
+                        {formatQuantityWithUnit(evt.quantity, evt.unit)}
+                      </strong>
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-stone-500 dark:text-stone-400 shrink-0">{evt.date}</span>
                 </div>
-                <span className="text-[11px] text-stone-500 dark:text-stone-400 shrink-0">{evt.date}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+              ))}
+            </div>
+          </section>
+        );
+      })()}
     </div>
   );
 };

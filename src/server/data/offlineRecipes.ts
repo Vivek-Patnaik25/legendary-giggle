@@ -26,8 +26,8 @@ export const OFFLINE_RECIPES: Recipe[] = [
     prepTimeMinutes: 20,
     servings: 4,
     instructions: [
-      'Beat eggs in a large bowl with salt, pepper, and a splash of milk or cream.',
-      'Sauté any chopped vegetables (bell peppers, onions, spinach) in an oven-safe skillet until tender.',
+      'Beat eggs in a large bowl with salt, pepper, and a splash of milk.',
+      'Sauté chopped bell pepper and onion in an oven-safe skillet until tender.',
       'Pour egg mixture over the vegetables, scatter cheese on top.',
       'Cook over medium-low heat for 5 minutes, then transfer to a hot grill/broiler until golden and set.',
     ],
@@ -49,10 +49,10 @@ export const OFFLINE_RECIPES: Recipe[] = [
     servings: 2,
     instructions: [
       'Heat oil in a wok or large pan over high heat.',
-      'Sauté minced garlic, ginger, and sliced scallions for 30 seconds.',
-      'Add whatever meat or diced vegetables are on hand and stir fry until hot.',
+      'Sauté minced garlic and sliced scallions for 30 seconds.',
       'Add cold leftover cooked rice, breaking up clumps with a spatula.',
-      'Drizzle with soy sauce and sesame oil; toss vigorously until fragrant and steaming.',
+      'Drizzle with soy sauce; toss vigorously until fragrant and steaming.',
+      'Whisk in eggs if desired and scramble through the rice before serving.',
     ],
     ingredients: [
       { name: 'rice', quantity: 300, unit: 'g' },
@@ -71,11 +71,10 @@ export const OFFLINE_RECIPES: Recipe[] = [
     prepTimeMinutes: 30,
     servings: 4,
     instructions: [
-      'In a heavy pot, sweat onions, carrots, and celery in olive oil until soft.',
-      'Add minced garlic, canned or fresh tomatoes, and tomato paste.',
-      'Pour in vegetable or chicken broth and bring to a simmer.',
-      'Add canned beans/chickpeas and any diced zucchini or leafy greens.',
-      'Simmer 15 minutes, stir in pasta or rice for the last 8 minutes, season with herbs and serve.',
+      'In a heavy pot, sweat chopped onion and carrots in olive oil until soft.',
+      'Add minced garlic, canned tomatoes, and water to bring to a simmer.',
+      'Add chickpeas and diced zucchini.',
+      'Simmer for 15 minutes until tender, season with salt and pepper, and serve warm.',
     ],
     ingredients: [
       { name: 'onion', quantity: 1, unit: 'piece' },
@@ -96,8 +95,8 @@ export const OFFLINE_RECIPES: Recipe[] = [
     servings: 4,
     instructions: [
       'Boil pasta in salted water until al dente.',
-      'In a saucepan, warm tomato puree with olive oil, garlic, and cream or cream cheese.',
-      'Toss drained pasta in the sauce, season with salt and torn basil or oregano.',
+      'In a saucepan, warm tomato puree with olive oil, minced garlic, and heavy cream.',
+      'Toss drained pasta in the sauce, season with salt and fresh torn basil.',
       'Transfer to a baking dish, top with grated cheese, and bake at 200°C for 15 mins until bubbling.',
     ],
     ingredients: [
@@ -106,6 +105,7 @@ export const OFFLINE_RECIPES: Recipe[] = [
       { name: 'garlic', quantity: 2, unit: 'clove' },
       { name: 'heavy cream', quantity: 100, unit: 'ml' },
       { name: 'cheese', quantity: 80, unit: 'g' },
+      { name: 'basil', quantity: 1, unit: 'bunch', optional: true },
     ],
     source: 'bundled_offline',
     tags: ['Kid-Friendly', 'Comfort', 'Vegetarian'],
@@ -118,8 +118,8 @@ export const OFFLINE_RECIPES: Recipe[] = [
     servings: 4,
     instructions: [
       'Preheat oven to 210°C.',
-      'Cut chicken and any vegetables (potatoes, bell peppers, onions, carrots) into bite-sized chunks.',
-      'Toss everything on a baking sheet with olive oil, salt, pepper, garlic powder, and paprika.',
+      'Cut chicken breast, bell pepper, onion, and potatoes into bite-sized chunks.',
+      'Toss everything on a baking sheet with olive oil, salt, and pepper.',
       'Roast for 25-30 minutes until chicken is cooked through and vegetables are caramelized.',
     ],
     ingredients: [
@@ -139,10 +139,10 @@ export const OFFLINE_RECIPES: Recipe[] = [
     servings: 3,
     instructions: [
       'Heat oil in a pan, cook chopped onion, garlic, and ginger until soft.',
-      'Stir in curry powder or garam masala and cook for 1 minute until fragrant.',
+      'Stir in curry powder for 1 minute until fragrant.',
       'Add canned coconut milk and drained chickpeas.',
       'Simmer for 10 minutes until thick and aromatic.',
-      'Stir in fresh spinach or greens and cilantro just before serving with rice.',
+      'Stir in fresh spinach and cilantro just before serving.',
     ],
     ingredients: [
       { name: 'chickpeas', quantity: 400, unit: 'g' },
@@ -164,10 +164,10 @@ export const OFFLINE_RECIPES: Recipe[] = [
     servings: 2,
     instructions: [
       'Sauté diced onion and bell pepper in olive oil until soft.',
-      'Add minced garlic, cumin, smoked paprika, and canned tomatoes. Simmer for 10 minutes.',
+      'Add minced garlic and canned tomatoes. Simmer for 10 minutes.',
       'Make wells in the sauce and gently crack eggs into the indentations.',
       'Cover with a lid and cook gently for 5-8 minutes until egg whites are set and yolks are runny.',
-      'Garnish with fresh cilantro or parsley and serve with warm bread.',
+      'Garnish with fresh cilantro and serve with warm bread.',
     ],
     ingredients: [
       { name: 'eggs', quantity: 4, unit: 'piece' },
@@ -176,6 +176,7 @@ export const OFFLINE_RECIPES: Recipe[] = [
       { name: 'onion', quantity: 1, unit: 'piece' },
       { name: 'garlic', quantity: 2, unit: 'clove' },
       { name: 'bread', quantity: 2, unit: 'slice', optional: true },
+      { name: 'cilantro', quantity: 1, unit: 'bunch', optional: true },
     ],
     source: 'bundled_offline',
     tags: ['Brunch', 'One-Pan', 'Vegetarian'],
@@ -187,11 +188,10 @@ export const OFFLINE_RECIPES: Recipe[] = [
     prepTimeMinutes: 35,
     servings: 4,
     instructions: [
-      'Brown minced beef in a pot with diced onions and garlic; drain excess fat.',
-      'Add diced bell peppers, canned tomatoes, tomato paste, and canned beans.',
-      'Season generously with chili powder, cumin, oregano, salt, and pepper.',
+      'Brown ground beef in a pot with diced onion and garlic; drain excess fat.',
+      'Add diced bell pepper and canned tomatoes.',
       'Simmer on low for 25 minutes to develop rich flavours.',
-      'Serve warm topped with yogurt or shredded cheese.',
+      'Serve warm topped with yogurt.',
     ],
     ingredients: [
       { name: 'ground beef', quantity: 400, unit: 'g' },
@@ -213,7 +213,7 @@ export const OFFLINE_RECIPES: Recipe[] = [
     instructions: [
       'Slice eggplant into 1cm rounds, sprinkle with salt and let rest 5 mins.',
       'Sear eggplant slices in hot olive oil until golden brown on both sides and silky in the middle.',
-      'In a bowl, mix Greek yogurt with grated garlic, lemon juice, and a pinch of salt.',
+      'In a bowl, mix Greek yogurt with minced garlic and a pinch of salt.',
       'Spread the garlic yogurt on a platter, layer warm eggplant slices on top, and scatter cilantro.',
     ],
     ingredients: [
@@ -232,15 +232,16 @@ export const OFFLINE_RECIPES: Recipe[] = [
     prepTimeMinutes: 15,
     servings: 2,
     instructions: [
-      'Mash overripe bananas in a bowl with eggs.',
-      'Stir in oats or flour, baking soda, and a pinch of cinnamon.',
+      'Mash overripe bananas in a bowl with eggs and a splash of milk.',
+      'Stir in flour and oats.',
       'Cook ladlefuls on a lightly buttered skillet over medium heat for 2-3 minutes per side.',
-      'Serve with a dollop of yogurt or a drizzle of honey.',
+      'Serve warm.',
     ],
     ingredients: [
       { name: 'banana', quantity: 2, unit: 'piece' },
       { name: 'eggs', quantity: 2, unit: 'piece' },
       { name: 'flour', quantity: 100, unit: 'g' },
+      { name: 'oats', quantity: 80, unit: 'g', optional: true },
       { name: 'milk', quantity: 50, unit: 'ml', optional: true },
     ],
     source: 'bundled_offline',

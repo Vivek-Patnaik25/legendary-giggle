@@ -30,11 +30,20 @@ export function formatUnit(quantity: number, unit: string): string {
   if (norm === 'piece' || norm === 'pieces') {
     return Math.abs(quantity) === 1 ? 'piece' : 'pieces';
   }
-  if (norm === 'tin' || norm === 'tins') {
+  if (norm === 'tin' || norm === 'tins' || norm === 'can' || norm === 'cans') {
     return Math.abs(quantity) === 1 ? 'tin' : 'tins';
   }
   if (norm === 'clove' || norm === 'cloves') {
     return Math.abs(quantity) === 1 ? 'clove' : 'cloves';
+  }
+  if (norm === 'slice' || norm === 'slices') {
+    return Math.abs(quantity) === 1 ? 'slice' : 'slices';
+  }
+  if (norm === 'bunch' || norm === 'bunches') {
+    return Math.abs(quantity) === 1 ? 'bunch' : 'bunches';
+  }
+  if (norm === 'pack' || norm === 'packs') {
+    return Math.abs(quantity) === 1 ? 'pack' : 'packs';
   }
   if (norm === 'item' || norm === 'items') {
     return Math.abs(quantity) === 1 ? 'item' : 'items';
@@ -51,12 +60,16 @@ export function formatUnit(quantity: number, unit: string): string {
   return unit;
 }
 
-export function formatQuantityWithUnit(quantity: number, unit: string): string {
-  const u = formatUnit(quantity, unit);
-  return `${quantity} ${u}`;
+export function formatQuantityWithUnit(quantity: number | string, unit: string): string {
+  const num = typeof quantity === 'string' ? parseFloat(quantity) : quantity;
+  if (isNaN(num)) return `${quantity} ${unit || ''}`.trim();
+  const u = formatUnit(num, unit);
+  const numStr = Number.isInteger(num) ? num.toString() : parseFloat(num.toFixed(2)).toString();
+  return `${numStr} ${u}`;
 }
 
 export function pluralize(count: number, singular: string, plural?: string): string {
   const p = plural || (singular === 'piece' ? 'pieces' : `${singular}s`);
   return `${count} ${Math.abs(count) === 1 ? singular : p}`;
 }
+

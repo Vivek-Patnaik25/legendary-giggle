@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { usePantry } from '../context/PantryContext.js';
 import { useAuth } from '../context/AuthContext.js';
 import { FreshnessBar } from './FreshnessBar.js';
-import { cleanText, pluralize } from '../utils/text.js';
+import { cleanText, pluralize, formatQuantityWithUnit } from '../utils/text.js';
 import {
   Flame,
   ChefHat,
@@ -191,7 +191,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
                       {item.location}
                     </span>
                     <span className="text-xs text-stone-500 dark:text-stone-400">
-                      {item.current_quantity} {item.unit}
+                      {formatQuantityWithUnit(item.current_quantity, item.unit)}
                     </span>
                   </div>
 
@@ -255,10 +255,15 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>Uses {recipe.pantryItemsUsedCount} from your fridge</span>
                     </div>
-                    {recipe.missingCount > 0 && (
+                    {recipe.missingCount > 0 ? (
                       <div className="flex items-center gap-1 text-stone-500">
                         <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                        <span>Needs: {recipe.missingIngredients?.map((m: any) => cleanText(typeof m === 'object' ? m?.name : m)).filter(Boolean).slice(0, 3).join(', ')}</span>
+                        <span>Needs {recipe.missingCount}: {recipe.missingIngredients?.map((m: any) => cleanText(typeof m === 'object' ? m?.name : m)).filter(Boolean).join(', ')}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>All {recipe.ingredients?.length || 0} ingredients in stock</span>
                       </div>
                     )}
                   </div>

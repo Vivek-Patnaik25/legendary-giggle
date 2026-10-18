@@ -182,7 +182,7 @@ export async function rankRescueRecipes(
         if (matchedPantry.urgency.tier === 'critical' || matchedPantry.urgency.tier === 'high') {
           urgentCount++;
         }
-      } else if (!reqIng.optional) {
+      } else {
         missingIngredients.push(reqIng);
       }
     }
@@ -190,10 +190,12 @@ export async function rankRescueRecipes(
     // Matching score formula:
     // Urgency score contribution + items used bonus - missing ingredients penalty + rescue candidate boost
     const rescueBonus = urgentCount > 0 ? 30 : 0;
+    const requiredMissingCount = missingIngredients.filter(m => !m.optional).length;
+    const optionalMissingCount = missingIngredients.filter(m => m.optional).length;
     const matchingScore = Math.round(
       (urgentScoreSum * 0.5) +
       (usedPantryItems.length * 20) -
-      (missingIngredients.length * 15) +
+      (requiredMissingCount * 15 + optionalMissingCount * 5) +
       rescueBonus
     );
 

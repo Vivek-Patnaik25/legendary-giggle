@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { usePantry, PantryItem } from '../context/PantryContext.js';
 import { useAuth } from '../context/AuthContext.js';
 import { FreshnessBar } from './FreshnessBar.js';
-import { cleanText, pluralize } from '../utils/text.js';
+import { cleanText, pluralize, formatQuantityWithUnit } from '../utils/text.js';
 import {
   Search,
   Filter,
@@ -250,7 +250,7 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
                       <Minus className="w-3 h-3" />
                     </button>
                     <span className="text-xs font-semibold text-stone-800 dark:text-stone-200 min-w-12 text-center">
-                      {item.current_quantity} {item.unit}
+                      {formatQuantityWithUnit(item.current_quantity, item.unit)}
                     </span>
                     <button
                       onClick={() => handleDelta(item, 1)}

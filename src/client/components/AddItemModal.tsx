@@ -3,7 +3,7 @@ import { usePantry } from '../context/PantryContext.js';
 import { estimateExpiryDate } from '../../domain/expiry.js';
 import { normaliseUnit } from '../../domain/units.js';
 import { AccessibleModal } from './AccessibleModal.js';
-import { cleanText } from '../utils/text.js';
+import { cleanText, formatQuantityWithUnit } from '../utils/text.js';
 import {
   Barcode,
   Calendar,
@@ -203,7 +203,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
                     {p.name}
                   </div>
                   <div className="text-[11px] text-stone-400 mt-0.5 capitalize">
-                    {p.qty} {p.unit} &bull; {p.location}
+                    {formatQuantityWithUnit(p.qty, p.unit)} &bull; {p.location}
                   </div>
                 </button>
               ))}
@@ -332,7 +332,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
                   <option value="g">grams (g)</option>
                   <option value="kg">kg</option>
                   <option value="ml">ml</option>
-                  <option value="l">litres (l)</option>
+                  <option value="l">litres (L)</option>
                   <option value="tin">tins / cans</option>
                 </select>
               </div>

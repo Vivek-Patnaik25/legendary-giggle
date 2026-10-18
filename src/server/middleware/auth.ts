@@ -22,10 +22,13 @@ declare module 'fastify' {
 export async function authenticate(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const db = getDb();
   
-  // Check cookie or Authorization header
+  // Check cookie, Authorization header, or query token (for SSE EventSource)
   let sessionId = request.cookies?.pantry_session;
   if (!sessionId && request.headers.authorization?.startsWith('Bearer ')) {
     sessionId = request.headers.authorization.slice(7).trim();
+  }
+  if (!sessionId && (request.query as any)?.token) {
+    sessionId = String((request.query as any).token).trim();
   }
 
   if (!sessionId) {

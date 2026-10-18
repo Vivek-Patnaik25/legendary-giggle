@@ -5,7 +5,7 @@ import { queueMutation, flushSyncQueue, getPendingMutationsCount, purgeLocalHous
 import confetti from 'canvas-confetti';
 import { trackLocalEvent, checkDay1Return } from '../analytics.js';
 import { cleanText } from '../utils/text.js';
-import { apiFetch } from '../api.js';
+import { apiFetch, getAuthToken } from '../api.js';
 
 export interface PantryItem {
   id: string;
@@ -197,7 +197,11 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     let pollInterval: any = null;
 
     try {
-      eventSource = new EventSource(`/api/households/${currentHousehold.id}/events`);
+      const token = getAuthToken();
+      const sseUrl = token
+        ? `/api/households/${currentHousehold.id}/events?token=${encodeURIComponent(token)}`
+        : `/api/households/${currentHousehold.id}/events`;
+      eventSource = new EventSource(sseUrl);
       eventSource.onmessage = () => {
         refreshPantry();
       };

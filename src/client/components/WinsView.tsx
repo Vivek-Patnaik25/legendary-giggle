@@ -81,14 +81,14 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-5">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+          <span className="text-xs font-semibold uppercase tracking-wider text-stone-600 dark:text-stone-400">
             Household Progress
           </span>
           <h2 className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100 tracking-tight mt-0.5">
             Wins & Milestones
           </h2>
-          <p className="text-xs text-stone-500 mt-1">
-            Tracking food saved from going to waste in <strong>{currentHousehold?.name || 'Kitchen'}</strong>
+          <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">
+            Tracking food saved from going to waste in <strong className="text-stone-800 dark:text-stone-200 font-semibold">{currentHousehold?.name || 'Kitchen'}</strong>
           </p>
         </div>
 
@@ -105,47 +105,47 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Metric 1: Rescue Streak */}
         <div className="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/60 shadow-sm">
-          <div className="flex items-center justify-between text-stone-500 mb-1">
+          <div className="flex items-center justify-between text-stone-600 dark:text-stone-400 mb-1">
             <span className="text-xs font-medium">Rescue Streak</span>
             <Flame className="w-4 h-4 text-apricot" />
           </div>
           <div className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100 flex items-baseline gap-1.5">
             <span>{pluralize(streak, 'week')}</span>
             {scoreboard?.isDemoData && streak > 0 && (
-              <span className="text-[10px] font-sans font-medium px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-500 border border-stone-200 dark:border-stone-700">
+              <span className="text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700">
                 Demo
               </span>
             )}
           </div>
-          <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
+          <p className="text-[11px] text-stone-600 dark:text-stone-400 mt-1">
             Consecutive weeks below waste limit
           </p>
         </div>
 
         {/* Metric 2: Rescued Groceries */}
         <div className="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/60 shadow-sm">
-          <div className="flex items-center justify-between text-stone-500 mb-1">
+          <div className="flex items-center justify-between text-stone-600 dark:text-stone-400 mb-1">
             <span className="text-xs font-medium">Rescued</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100">
             {pluralize(rescued, 'item')}
           </div>
-          <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
+          <p className="text-[11px] text-stone-600 dark:text-stone-400 mt-1">
             Cooked before expiration this week
           </p>
         </div>
 
         {/* Metric 3: Rescue Efficiency */}
         <div className="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/60 shadow-sm">
-          <div className="flex items-center justify-between text-stone-500 mb-1">
+          <div className="flex items-center justify-between text-stone-600 dark:text-stone-400 mb-1">
             <span className="text-xs font-medium">Rescue Rate</span>
             <Trophy className="w-4 h-4 text-stone-400" />
           </div>
           <div className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100">
             {scorePercent}%
           </div>
-          <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
+          <p className="text-[11px] text-stone-600 dark:text-stone-400 mt-1">
             Of processed food eaten, not binned
           </p>
         </div>
@@ -156,13 +156,13 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
             ? 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/60'
             : 'border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20'
         }`}>
-          <div className="flex items-center justify-between text-stone-500 mb-1">
+          <div className="flex items-center justify-between text-stone-600 dark:text-stone-400 mb-1">
             <span className="text-xs font-medium">Waste vs Limit</span>
             <Target className="w-4 h-4 text-stone-400" />
           </div>
           <div className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100 flex items-baseline gap-1">
             <span>{wasted}</span>
-            <span className="text-xs font-sans font-normal text-stone-500">/ max {target}</span>
+            <span className="text-xs font-sans font-normal text-stone-600 dark:text-stone-400">/ max {target}</span>
           </div>
           <p className={`text-[11px] mt-1 ${isPactMet ? 'text-emerald-700 dark:text-emerald-400 font-medium' : 'text-tomato font-medium'}`}>
             {isPactMet ? 'Within household target' : 'Exceeded target limit'}
@@ -179,7 +179,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
               Achievements
             </h3>
           </div>
-          <span className="text-xs text-stone-500">
+          <span className="text-xs text-stone-600 dark:text-stone-400">
             {badges.filter(b => b.isUnlocked).length} of {badges.length} unlocked
           </span>
         </div>
@@ -231,7 +231,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
                         <Lock className="w-3 h-3 text-stone-400 shrink-0" />
                       )}
                     </div>
-                    <p className="text-[11px] text-stone-500 leading-snug mt-1 line-clamp-2">
+                    <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-snug mt-1 line-clamp-2">
                       {badge.description}
                     </p>
                   </div>
@@ -239,7 +239,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
 
                 {/* Progress bar with distinct colors: Emerald for complete, Amber for in-progress */}
                 <div className="mt-3.5 pt-2 border-t border-stone-100 dark:border-stone-800/80">
-                  <div className="flex items-center justify-between text-[10px] text-stone-500 mb-1">
+                  <div className="flex items-center justify-between text-[10px] text-stone-600 dark:text-stone-400 mb-1">
                     <span>{prog.label}</span>
                     {badge.isUnlocked && badge.unlockedAt && (
                       <span>{new Date(badge.unlockedAt).toLocaleDateString()}</span>
@@ -282,7 +282,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
                 Recent Activity
               </h3>
               {isDemo && visibleEvents.length > 0 && (
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 border border-stone-200 dark:border-stone-700">
+                <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border border-stone-300 dark:border-stone-700">
                   Demo Data
                 </span>
               )}
@@ -306,12 +306,12 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
                         </strong>
                       </span>
                     </div>
-                    <span className="text-[11px] text-stone-500 dark:text-stone-400 shrink-0">{evt.date}</span>
+                    <span className="text-[11px] text-stone-600 dark:text-stone-400 shrink-0">{evt.date}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-stone-200 dark:border-stone-800 p-6 text-center text-xs text-stone-400">
+              <div className="rounded-xl border border-dashed border-stone-200 dark:border-stone-800 p-6 text-center text-xs text-stone-600 dark:text-stone-400">
                 No food rescues or waste logged yet this week. Use or cook ingredients to record household rescues.
               </div>
             )}

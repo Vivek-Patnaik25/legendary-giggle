@@ -131,7 +131,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
               <HelpCircle className="w-4 h-4" />
             </button>
           </div>
-          <span className="text-xs text-stone-500 dark:text-stone-400 font-medium">
+          <span className="text-xs text-stone-600 dark:text-stone-400 font-medium">
             {pluralize(expiringSoon.length, 'item')} to rescue
           </span>
         </div>
@@ -190,7 +190,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
                     <span className="text-[11px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-medium capitalize border border-stone-200 dark:border-stone-700">
                       {item.location}
                     </span>
-                    <span className="text-xs text-stone-500 dark:text-stone-400">
+                    <span className="text-xs text-stone-600 dark:text-stone-400">
                       {formatQuantityWithUnit(item.current_quantity, item.unit)}
                     </span>
                   </div>
@@ -220,13 +220,13 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
           <h2 className="font-display text-xl text-stone-900 dark:text-stone-100">
             Cook tonight
           </h2>
-          <span className="text-xs text-stone-500 dark:text-stone-400">
+          <span className="text-xs text-stone-600 dark:text-stone-400">
             Ranked by expiring items
           </span>
         </div>
 
         {rescueRecipes.length === 0 ? (
-          <div className="bg-stone-50 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 rounded-xl p-6 text-center text-xs text-stone-500">
+          <div className="bg-stone-50 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 rounded-xl p-6 text-center text-xs text-stone-600 dark:text-stone-400">
             Add staple items like eggs, onions, or tomatoes to unlock rescue recipes.
           </div>
         ) : (
@@ -237,7 +237,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
                 className="bg-white dark:bg-stone-850 border border-stone-200 dark:border-stone-800 rounded-xl p-4 shadow-sm hover:border-stone-300 dark:hover:border-stone-700 transition flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
+                  <div className="flex items-center justify-between text-xs text-stone-600 dark:text-stone-400">
                     <span className="capitalize">{recipe.category}</span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
@@ -256,7 +256,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
                       <span>Uses {recipe.pantryItemsUsedCount} from your fridge</span>
                     </div>
                     {recipe.missingCount > 0 ? (
-                      <div className="flex items-center gap-1 text-stone-500">
+                      <div className="flex items-center gap-1 text-stone-600 dark:text-stone-400">
                         <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                         <span>Needs {recipe.missingCount}: {recipe.missingIngredients?.map((m: any) => cleanText(typeof m === 'object' ? m?.name : m)).filter(Boolean).join(', ')}</span>
                       </div>

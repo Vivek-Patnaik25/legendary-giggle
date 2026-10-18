@@ -11,6 +11,8 @@ import {
   Trash2,
   Clock,
   Target,
+  Settings,
+  X,
 } from 'lucide-react';
 
 interface HouseholdSettingsModalProps {
@@ -138,6 +140,23 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
       maxWidth="max-w-lg"
     >
       <div className="space-y-6">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between pb-3 border-b border-stone-200 dark:border-stone-800">
+          <div className="flex items-center gap-2">
+            <Settings className="w-5 h-5 text-stone-700 dark:text-stone-300" />
+            <h3 className="font-serif text-lg font-bold text-stone-900 dark:text-stone-100">
+              {cleanText(currentHousehold?.name || 'Kitchen')} Settings
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer"
+            aria-label="Close settings"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
         {/* Guest Autosave Info & Claim Action */}
         {isGuest && (
           <div className="bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -145,7 +164,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
               <span className="text-xs font-semibold text-stone-900 dark:text-stone-100">
                 Guest Kitchen (Autosaved)
               </span>
-              <p className="text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed">
+              <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-relaxed">
                 All food items, rescues, and streaks are automatically saved on this device. Create an account to invite family members or access on other devices.
               </p>
             </div>
@@ -160,15 +179,16 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
             )}
           </div>
         )}
+
         {/* Waste Reduction Target */}
         <section className="space-y-3">
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-stone-500" />
+            <Target className="w-4 h-4 text-stone-600 dark:text-stone-400" />
             <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100">
               Household Waste Limit
             </h4>
           </div>
-          <p className="text-xs text-stone-500">
+          <p className="text-xs text-stone-600 dark:text-stone-400">
             Set your weekly waste ceiling. Rescues must keep waste below this target to maintain streaks.
           </p>
 
@@ -182,7 +202,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
               onChange={(e) => setWeeklyTarget(parseFloat(e.target.value) || 0)}
               className="w-24 px-3 py-1.5 text-xs bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl text-stone-900 dark:text-stone-100 outline-none"
             />
-            <span className="text-xs text-stone-500">items/week</span>
+            <span className="text-xs text-stone-600 dark:text-stone-400">items/week</span>
             {isOwner && (
               <button
                 type="submit"
@@ -203,7 +223,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
         {/* Household Members */}
         <section className="space-y-3 pt-3 border-t border-stone-100 dark:border-stone-800">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-stone-500" />
+            <Users className="w-4 h-4 text-stone-600 dark:text-stone-400" />
             <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100">
               Members ({members.length})
             </h4>

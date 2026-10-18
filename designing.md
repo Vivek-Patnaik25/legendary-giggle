@@ -475,3 +475,38 @@ Request #4:
 | **Container Execution (`docker compose`)** | **NOT VERIFIED** | Host gap: Docker Desktop daemon not active on Windows host (`open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified`). Configs present in `Dockerfile`, `docker-compose.yml`, `nginx.conf`. |
 | **Security & Vulnerability Free** | **VERIFIED** | `npm audit` (0 vulnerabilities) |
 | **Complete End-to-End Core Loop** | **VERIFIED** | `npm run test:e2e` (10/10 steps passed against reverse proxy load balancer) |
+
+---
+
+## 6. Design Review Fixes & Acceptance Suite (v3)
+
+### 6.1 Group 1: Bugs
+- **Resolved `[object Object]`**: Replaced all stringified object occurrences in recipe ingredients with clean text extraction via `cleanText()` in `src/client/utils/text.ts` and `PantryContext.tsx`. Added comprehensive unit tests in `tests/client/text-rendering.test.ts` to assert zero occurrences of `[object` or `&amp;`.
+- **Recipe Modal Title**: Placed clear recipe title `<h2>` above category tags in `RecipeModal.tsx`.
+- **Dark Mode Verified**: Configured Tailwind v4 `@custom-variant dark (&:where(.dark, .dark *));` in `index.css`. Playwright test confirmed dark mode body background evaluates to `rgb(12, 10, 9)`.
+- **Transparent Mascot PNGs**: Converted all Sir Expiry and badge illustrations to transparent 32-bit RGBA PNGs using `sharp` to render crisply on both light cream and dark backgrounds.
+
+### 6.2 Group 2: Layout
+- **Mobile Bottom Padding**: Added `pb-36 sm:pb-24` on scrollable screen containers (`TodayView`, `FridgeView`, `WinsView`) so the floating Add button never obscures list items at 375px viewport.
+- **Removed "Save fridge"**: Removed misleading "Save fridge" button from `Navbar.tsx`; added clear autosave explanation and optional account claiming in `HouseholdSettingsModal.tsx`.
+- **Replaced 4 Unlabeled Icons**: Replaced cryptic icons on item cards with a single tactile "Use" button and an accessible overflow action menu (`MoreHorizontal`).
+
+### 6.3 Group 3: Copy and Data
+- **Standardized Pluralisation & Units**: Implemented `pluralize(count, noun)` ("1 piece" / "2 pieces", "1 item" / "2 items") and uppercase "L" for litres in `src/client/utils/text.ts`.
+- **Filtered Sub-gram Entries**: Eliminated `1 g` noise from activity logs in `gamification.ts`, `WinsView.tsx`, and `ScoreboardView.tsx`.
+- **Recipe Ingredient-Instruction Parity**: Audited all 10 offline recipes in `src/server/data/offlineRecipes.ts` for 100% agreement between ingredient list and instruction text.
+- **Count Consistency**: Aligned recipe card "Uses N from your fridge" and "Needs M" with recipe modal counts.
+
+### 6.4 Group 4: Badges & Demo Data
+- **Locked Badges in Full Colour**: Displayed locked achievement badge illustrations in full colour at reduced opacity (`opacity-40`), removing depressing grayscale/blur.
+- **Distinct Progress Bar Colors**: Used `bg-emerald-500` for 100% completed milestones and `bg-amber-500` for active progress.
+- **Demo Data Labeling**: Fresh households start with 0 streak and clean activity logs; seeded demo entries display distinct "Demo" / "Demo Data" badges.
+
+### 6.5 Group 5: Verification & Acceptance Suite
+- **Automated Acceptance Suite (`scripts/verify-acceptance.ts`)**:
+  1. **First-Run Video**: Recorded first-run interactive flow from empty state to preset addition, tactile rescue feedback, and recipe modal viewing (`docs/screens/v3/first-run.mp4`, 2,712 KB, 29.4s).
+  2. **Screenshot Suite**: Captured 20 screenshots covering desktop (1280x800) and mobile (375x812) across light and dark themes for Today, Fridge, Wins, Weekly Report Modal, and Recipe Modal.
+  3. **Axe WCAG AA Accessibility Audit**: 0 serious or critical violations across Today, Fridge, and Wins views with contrast ratios > 4.5:1 (`text-stone-600` on cream backgrounds).
+  4. **Keyboard Navigation**: Validated Tab, Enter, and Escape modal control.
+  5. **Forbidden Token DOM Scan**: 0 occurrences of `[object`, `undefined`, `NaN`, or `&amp;` across all views and modals.
+

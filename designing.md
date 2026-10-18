@@ -713,6 +713,29 @@ Request #4:
   - Video Recording: `first-run.webm` (2,835.0 KB, 29.36s, verified with ffprobe as VP9 WebM)
   - First-Run Sequence: 8 step screenshots in `docs/screens/v6/first-run-sequence/`
 
+---
+
+## 10. Multi-Cloud Production Deployment: Render & Vercel
+
+### 10.1 Render Web Service (Full-Stack Production Host)
+- **Service ID**: `srv-db9nfccs728c73cbabt0`
+- **Owner**: `thevivekpatnaik@gmail.com`
+- **Active Deploy ID**: `dep-dbabmujm8hqs73b7iel0` (Status: `live`)
+- **Primary Live URL**: [https://pantry-rescue.onrender.com](https://pantry-rescue.onrender.com)
+- **Health Check Endpoint**: [https://pantry-rescue.onrender.com/health](https://pantry-rescue.onrender.com/health) (HTTP 200 `{"status":"ok","uptime":...,"db":"ok"}`)
+- **Architecture**: Single web service hosting both the Node 22 Fastify API server and built Vite client (`dist/`) backed by persistent SQLite.
+
+### 10.2 Vercel Production Deployment (Edge CDN + Proxy Rewrites)
+- **Project**: `vivek-patnaiks-projects/pantry-rescue`
+- **Active Deployment ID**: `dpl_ZmKQfxNA2mrJL9cFyph6xE1p8nxo` (Ready State: `READY`)
+- **Primary Production URL**: [https://pantry-rescue.vercel.app](https://pantry-rescue.vercel.app)
+- **Inspection URL**: [https://vercel.com/vivek-patnaiks-projects/pantry-rescue/ZmKQfxNA2mrJL9cFyph6xE1p8nxo](https://vercel.com/vivek-patnaiks-projects/pantry-rescue/ZmKQfxNA2mrJL9cFyph6xE1p8nxo)
+- **Routing & Proxy Architecture (`vercel.json`)**:
+  - Serves static pre-compiled Vite frontend from edge CDN with sub-second asset delivery.
+  - Transparently proxies all API traffic (`/api/*`) and health checks (`/health`) to the live Render backend (`https://pantry-rescue.onrender.com`).
+  - Rewrites all client SPA routes (`/(.*)`) to `/index.html` for client-side navigation.
+  - Verified live: `npx vercel curl https://pantry-rescue.vercel.app/health` returns HTTP 200 OK directly from backend database.
+
 
 
 

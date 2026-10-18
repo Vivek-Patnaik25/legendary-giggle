@@ -529,5 +529,12 @@ Request #4:
 - **Closest Match Notice in `TodayView.tsx`**: If expiring items exist in the household but no recipes directly match them, a clear banner is rendered: "No recipes directly use your expiring items (...). Showing the closest matches from your pantry staples:".
 - **Added Automated Test**: Added test in `tests/server/recipes.test.ts` verifying that when an item is cooked/used, recipes re-rank to prioritize the remaining expiring items, and "Uses 0 from your fridge" never tops the list.
 
+### 7.3 Group 3: Pact Keeper Locked Progress & Unlock Wording
+- **Extracted `getBadgeProgress` in `src/client/utils/badges.ts`**: Implemented strict progress calculation for locked badges.
+- **Pact Keeper Lock Rule**: When locked (`isUnlocked: false`), progress is strictly capped below 100% (max 85% on day 6/7 of the active week) while on track, and 0% if waste exceeds the limit.
+- **Wording Parity**: Updated progress label to match the 7-day waste limit unlock rule (`X of 7 days below waste limit`).
+- **Added Automated Test**: Added unit test suite in `tests/client/badges.test.ts` asserting that locked progress is never 100% across all 7 days of the week, resets to 0% upon waste violation, and shows 100% / "Unlocked" only when unlocked.
+
+
 
 

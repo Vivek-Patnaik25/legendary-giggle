@@ -2,6 +2,7 @@ import React from 'react';
 import { usePantry } from '../context/PantryContext.js';
 import { useAuth } from '../context/AuthContext.js';
 import { pluralize, formatQuantityWithUnit } from '../utils/text.js';
+import { getBadgeProgress } from '../utils/badges.js';
 import {
   Trophy,
   Flame,
@@ -28,56 +29,8 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
   const scorePercent = scoreboard?.scorePercentage || 100;
   const isPactMet = scoreboard?.isPactMet ?? true;
 
-  // Compute fractional progress for locked badges
-  const getBadgeProgress = (badgeKey: string, isUnlocked: boolean) => {
-    if (isUnlocked) return { current: 1, total: 1, percent: 100, label: 'Unlocked' };
-
-    switch (badgeKey) {
-      case 'scrappy_chef': {
-        const cur = Math.min(rescued, 5);
-        return {
-          current: cur,
-          total: 5,
-          percent: Math.round((cur / 5) * 100),
-          label: `${cur} of 5 rescues this week`,
-        };
-      }
-      case 'onion_survivor': {
-        return {
-          current: 0,
-          total: 1,
-          percent: 0,
-          label: '0 of 1 urgent rescues',
-        };
-      }
-      case 'freezer_archaeologist': {
-        return {
-          current: 0,
-          total: 60,
-          percent: 0,
-          label: '0 of 60 days frozen',
-        };
-      }
-      case 'pact_keeper': {
-        return {
-          current: isPactMet ? 1 : 0,
-          total: 1,
-          percent: isPactMet ? 100 : 0,
-          label: isPactMet ? 'Target kept this week' : 'Target exceeded',
-        };
-      }
-      default:
-        return {
-          current: 0,
-          total: 1,
-          percent: 0,
-          label: 'In progress',
-        };
-    }
-  };
-
   return (
-    <div className="space-y-8 pb-36 sm:pb-24">
+    <div className="space-y-8 pb-56 sm:pb-32">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-5">
         <div>
@@ -186,7 +139,12 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {badges.map((badge) => {
-            const prog = getBadgeProgress(badge.key, badge.isUnlocked);
+            const prog = getBadgeProgress(badge.key, badge.isUnlocked, {
+              rescued,
+              wasted,
+              target,
+              isPactMet,
+            });
 
             return (
               <div

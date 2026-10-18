@@ -162,7 +162,7 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
           <h3 className="font-serif font-bold text-stone-800 dark:text-stone-200 text-base">
             {searchQuery ? 'No matching groceries' : 'No items here yet'}
           </h3>
-          <p className="text-xs text-stone-500 max-w-sm mx-auto">
+          <p className="text-xs text-stone-600 dark:text-stone-400 max-w-sm mx-auto">
             {searchQuery
               ? `No items found matching "${searchQuery}".`
               : 'Add ingredients from your kitchen to begin keeping food fresh.'}
@@ -194,7 +194,7 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
                       <h4 className="font-semibold text-stone-900 dark:text-stone-100 truncate text-sm">
                         {cleanText(item.name)}
                       </h4>
-                      <div className="flex items-center gap-1.5 text-[11px] text-stone-500 capitalize mt-0.5">
+                      <div className="flex items-center gap-1.5 text-[11px] text-stone-600 dark:text-stone-400 capitalize mt-0.5">
                         <span>{cleanText(item.category)}</span>
                         <span>&bull;</span>
                         <span>{cleanText(item.location)}</span>
@@ -231,7 +231,7 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
 
                   {/* Notes */}
                   {item.notes && (
-                    <p className="text-[11px] text-stone-400 italic line-clamp-1 mt-1">
+                    <p className="text-[11px] text-stone-600 dark:text-stone-400 italic line-clamp-1 mt-1">
                       {cleanText(item.notes)}
                     </p>
                   )}

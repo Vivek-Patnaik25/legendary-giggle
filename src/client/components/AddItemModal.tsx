@@ -155,7 +155,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
             className={`flex-1 py-1.5 rounded-md transition cursor-pointer ${
               activeTab === 'presets'
                 ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-xs'
-                : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200'
             }`}
           >
             Quick Presets
@@ -166,7 +166,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
             className={`flex-1 py-1.5 rounded-md transition cursor-pointer ${
               activeTab === 'manual'
                 ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-xs'
-                : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200'
             }`}
           >
             Manual Entry
@@ -177,7 +177,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
             className={`flex-1 py-1.5 rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeTab === 'barcode'
                 ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-xs'
-                : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200'
             }`}
           >
             <Barcode className="w-3.5 h-3.5" />
@@ -188,7 +188,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
         {/* Tab 1: Presets */}
         {activeTab === 'presets' && (
           <div className="space-y-3">
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-stone-600 dark:text-stone-400">
               Tap a kitchen staple to populate estimated expiry and unit:
             </p>
             <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
@@ -202,7 +202,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
                   <div className="font-semibold text-xs text-stone-900 dark:text-stone-100">
                     {p.name}
                   </div>
-                  <div className="text-[11px] text-stone-400 mt-0.5 capitalize">
+                  <div className="text-[11px] text-stone-600 dark:text-stone-400 mt-0.5 capitalize">
                     {formatQuantityWithUnit(p.qty, p.unit)} &bull; {p.location}
                   </div>
                 </button>
@@ -223,7 +223,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
         {/* Tab 2: Barcode */}
         {activeTab === 'barcode' && (
           <div className="space-y-3 py-2">
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-stone-600 dark:text-stone-400">
               Scan or enter a product barcode:
             </p>
             <div className="flex gap-2">

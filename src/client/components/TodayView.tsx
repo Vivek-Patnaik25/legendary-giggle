@@ -144,7 +144,8 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
             </span>
             <button
               onClick={() => setShowFreshnessTooltip(false)}
-              className="text-stone-500 hover:text-stone-800 dark:hover:text-stone-100"
+              className="text-stone-600 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-100 cursor-pointer"
+              aria-label="Dismiss tooltip"
             >
               <X className="w-3.5 h-3.5" />
             </button>

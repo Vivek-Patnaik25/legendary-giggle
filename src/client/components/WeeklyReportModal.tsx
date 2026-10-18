@@ -57,7 +57,7 @@ export const WeeklyReportModal: React.FC<WeeklyReportModalProps> = ({ isOpen, on
       maxWidth="max-w-md"
     >
       {isLoading || !report ? (
-        <div className="py-12 text-center text-xs text-stone-400">
+        <div className="py-12 text-center text-xs text-stone-600 dark:text-stone-400">
           Compiling this week's food rescue report...
         </div>
       ) : (
@@ -72,7 +72,7 @@ export const WeeklyReportModal: React.FC<WeeklyReportModalProps> = ({ isOpen, on
               <span className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100">
                 {report.householdName}
               </span>
-              <span className="text-[11px] text-stone-500">
+              <span className="text-[11px] text-stone-600 dark:text-stone-400 font-medium">
                 Week of {report.weekStart}
               </span>
             </div>
@@ -87,7 +87,7 @@ export const WeeklyReportModal: React.FC<WeeklyReportModalProps> = ({ isOpen, on
                 />
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] font-semibold text-stone-500 uppercase tracking-wide">
+                <div className="text-[10px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wide">
                   Sir Expiry's dispatch
                 </div>
                 <p className="font-serif italic text-xs text-stone-800 dark:text-stone-200 mt-0.5 leading-snug">
@@ -102,7 +102,7 @@ export const WeeklyReportModal: React.FC<WeeklyReportModalProps> = ({ isOpen, on
                 <div className="font-serif text-lg font-bold text-stone-900 dark:text-stone-100">
                   {report.rescuedCount}
                 </div>
-                <div className="text-[10px] font-medium text-stone-500 uppercase mt-0.5">
+                <div className="text-[10px] font-medium text-stone-600 dark:text-stone-400 uppercase mt-0.5">
                   Rescued
                 </div>
               </div>
@@ -111,7 +111,7 @@ export const WeeklyReportModal: React.FC<WeeklyReportModalProps> = ({ isOpen, on
                 <div className="font-serif text-lg font-bold text-stone-900 dark:text-stone-100">
                   {report.wastedCount}
                 </div>
-                <div className="text-[10px] font-medium text-stone-500 uppercase mt-0.5">
+                <div className="text-[10px] font-medium text-stone-600 dark:text-stone-400 uppercase mt-0.5">
                   Wasted
                 </div>
               </div>
@@ -121,7 +121,7 @@ export const WeeklyReportModal: React.FC<WeeklyReportModalProps> = ({ isOpen, on
                   <span>{report.streakWeeks}</span>
                   <Flame className="w-3.5 h-3.5 text-apricot" />
                 </div>
-                <div className="text-[10px] font-medium text-stone-500 uppercase mt-0.5">
+                <div className="text-[10px] font-medium text-stone-600 dark:text-stone-400 uppercase mt-0.5">
                   Streak
                 </div>
               </div>
@@ -129,7 +129,7 @@ export const WeeklyReportModal: React.FC<WeeklyReportModalProps> = ({ isOpen, on
 
             {/* Pact status */}
             <div className="flex items-center justify-between text-xs px-1">
-              <div className="flex items-center gap-1.5 text-stone-500">
+              <div className="flex items-center gap-1.5 text-stone-600 dark:text-stone-400">
                 <Target className="w-3.5 h-3.5" />
                 <span>Limit: max {report.weeklyTarget} wasted</span>
               </div>
@@ -146,7 +146,7 @@ export const WeeklyReportModal: React.FC<WeeklyReportModalProps> = ({ isOpen, on
             <button
               type="button"
               onClick={onClose}
-              className="text-xs font-semibold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition cursor-pointer"
+              className="text-xs font-semibold text-stone-600 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition cursor-pointer"
             >
               Close
             </button>

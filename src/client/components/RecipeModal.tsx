@@ -63,16 +63,16 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
         </div>
 
         {/* Metadata row */}
-        <div className="flex items-center gap-3 text-xs text-stone-500 pb-3 border-b border-stone-100 dark:border-stone-800">
+        <div className="flex items-center gap-3 text-xs text-stone-600 dark:text-stone-400 pb-3 border-b border-stone-100 dark:border-stone-800">
           <span className="px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium capitalize">
             {cleanText(recipe.category || 'Dinner')}
           </span>
           <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-stone-400" />
+            <Clock className="w-3.5 h-3.5 text-stone-500" />
             <span>{recipe.prepTimeMinutes || 30} mins</span>
           </span>
           <span className="flex items-center gap-1">
-            <Users className="w-3.5 h-3.5 text-stone-400" />
+            <Users className="w-3.5 h-3.5 text-stone-500" />
             <span>{recipe.servings || 4} servings</span>
           </span>
         </div>
@@ -81,10 +81,10 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
             <h4 className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
-              <ChefHat className="w-4 h-4 text-stone-500" />
+              <ChefHat className="w-4 h-4 text-stone-600 dark:text-stone-400" />
               <span>Ingredients ({recipe.ingredients?.length || 0})</span>
             </h4>
-            <span className="text-[11px] text-stone-500">
+            <span className="text-[11px] text-stone-600 dark:text-stone-400">
               {recipe.usedPantryItems?.length || 0} in fridge &bull; {recipe.missingIngredients?.length || 0} needed
             </span>
           </div>
@@ -99,18 +99,18 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
                   className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition ${
                     inPantry
                       ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-stone-900 dark:text-emerald-200 font-medium'
-                      : 'bg-stone-50/60 dark:bg-stone-900/40 border-stone-200/80 dark:border-stone-800/80 text-stone-500'
+                      : 'bg-stone-50/60 dark:bg-stone-900/40 border-stone-200/80 dark:border-stone-800/80 text-stone-700 dark:text-stone-300'
                   }`}
                 >
                   <div className="flex items-center gap-2 truncate">
                     {inPantry ? (
                       <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     ) : (
-                      <Plus className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                      <Plus className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400 shrink-0" />
                     )}
                     <span className="truncate">{cleanText(ing.name)}</span>
                   </div>
-                  <span className="text-[11px] text-stone-400 shrink-0 font-normal">
+                  <span className="text-[11px] text-stone-600 dark:text-stone-400 shrink-0 font-normal">
                     {formatQuantityWithUnit(ing.quantity, ing.unit)}
                   </span>
                 </div>
@@ -138,7 +138,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition cursor-pointer"
+            className="px-4 py-2 text-xs font-semibold text-stone-600 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition cursor-pointer"
           >
             Close
           </button>

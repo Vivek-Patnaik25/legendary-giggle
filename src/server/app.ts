@@ -48,9 +48,13 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     parseOptions: {},
   });
 
-  // Rate Limiter
+  // Rate Limiter: relaxed in test environment to allow automated acceptance audits
+  const maxRequests = process.env.NODE_ENV === 'test' || process.env.RATE_LIMIT_MAX
+    ? Number(process.env.RATE_LIMIT_MAX || 10000)
+    : 200;
+
   app.register(rateLimit, {
-    max: 200,
+    max: maxRequests,
     timeWindow: '1 minute',
   });
 

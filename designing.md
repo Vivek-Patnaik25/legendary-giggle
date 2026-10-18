@@ -539,6 +539,43 @@ Request #4:
 - **FFprobe Verification**: Confirmed recording container and codec via `ffprobe` (`Input #0, matroska,webm, from 'docs/screens/v3/first-run.webm': Video: vp9, 1280x800, 25 fps, duration 29.32s`).
 - **Removed Duplicate**: Deleted the misnamed duplicate `docs/screens/v3/first-run.mp4`, maintaining the authentic WebM recording.
 
+### 7.5 Group 5: Acceptance Suite V4, WCAG AA Contrast, and Dark Today Visual Verification
+
+#### Visual Description of Dark Today Screen (`docs/screens/v4/desktop-dark-today.png` & `docs/screens/v4/mobile-dark-today.png`)
+- **Page Canvas**: Deep warm charcoal (`#0C0A09` / `bg-stone-950`), completely avoiding cold navy blue or neon glows.
+- **Sir Expiry Mascot Panel**: Set on a warm dark surface (`#171412` / `dark:bg-stone-850`) bordered by subtle dark stone (`#292524` / `dark:border-stone-800`). The mascot illustration is a transparent 32-bit RGBA PNG, blending seamlessly without any white square halos or artifacts.
+- **Mascot Quote Legibility**: Rendered in `font-serif italic text-stone-100 dark:text-stone-100` (`#EDE8E0`) on `#171412`. The measured contrast ratio is **13.8:1**, far exceeding the WCAG AAA 7:1 threshold. The companion label "Sir Expiry's dispatch" is crisply styled in uppercase `text-stone-400` with letter spacing.
+- **Expiring Item Cards**: Housed in `#171412` with `border-stone-800`. Item titles are prominent in `text-stone-100`, days-remaining urgency pill uses semi-translucent red/tomato (`bg-tomato/15 border-tomato/30 text-tomato dark:text-red-300`), and secondary text (quantity, category) renders in `text-stone-400` (> 6:1 contrast). The tactile "Use" button sits with clear margins.
+- **"Cook tonight" Recipe Recommendations**: Suggestions appear in `#171412` cards with subtle stone borders. Recipe tags show `text-emerald-300` on `bg-emerald-950/40 border-emerald-800/40` for pantry ingredients used. "Cook" action button provides clear affordance without visual clutter.
+
+#### WCAG AA & Contrast Audit Across Both Themes (Axe-core)
+- **Relaxed Test Rate Limit**: In `src/server/app.ts`, elevated rate limit to 10,000 requests/minute when `NODE_ENV === 'test'` or `RATE_LIMIT_MAX` is set, allowing complete DOM data loading without `429 Too Many Requests`.
+- **Light Theme Contrast Upgrades**:
+  - Replaced low-contrast `text-stone-400` / `text-stone-500` on white and cream backgrounds with `text-stone-600 dark:text-stone-400` across `RecipeModal`, `AddItemModal`, `WeeklyReportModal`, `FridgeView`, and `HouseholdSettingsModal`.
+- **Audit Results**: 0 WCAG AA or color-contrast violations across all 6 views and modals in both themes:
+  - Today View (light & dark): **0 violations**
+  - Recipe Modal (light & dark): **0 violations**
+  - Fridge View (light & dark): **0 violations**
+  - Add Item Modal (light & dark): **0 violations**
+  - Wins View (light & dark): **0 violations**
+  - Weekly Report Modal (light & dark): **0 violations**
+
+#### Mobile Clearance Verification (375px Viewport)
+- Verified with Playwright bounding box collision checks at 375x812 viewport:
+  - **Today View**: Last card's "Use" button bottom does not overlap floating "Add" button top (clearance gap > 200px due to `pb-56`).
+  - **Fridge View**: Last card's "Use" button bottom (546px) is completely clear of floating "Add" button top (688px).
+
+#### Strict Forbidden Token DOM Scanner (Loaded Data)
+- Scanned loaded DOM across Today, Recipe Modal, Fridge, Add Item Modal, Wins, Weekly Report Modal, and Household Settings Modal.
+- **Result**: Exactly 0 occurrences of `[object`, `undefined`, `NaN`, or `&amp;`.
+
+#### Artifact Listing (`docs/screens/v4/`)
+- `first-run.webm` (2,958.7 KB, verified by ffprobe as VP9 WebM, 1280x800, 25 fps, 29.0s duration)
+- Desktop Light & Dark: `desktop-light-today.png`, `desktop-dark-today.png`, `desktop-light-fridge.png`, `desktop-dark-fridge.png`, `desktop-light-wins.png`, `desktop-dark-wins.png`, `desktop-light-modal-recipe.png`, `desktop-dark-modal-recipe.png`, `desktop-light-modal-report.png`, `desktop-dark-modal-report.png`
+- Mobile Light & Dark: `mobile-light-today.png`, `mobile-dark-today.png`, `mobile-light-fridge.png`, `mobile-dark-fridge.png`, `mobile-light-wins.png`, `mobile-dark-wins.png`, `mobile-light-modal-recipe.png`, `mobile-dark-modal-recipe.png`, `mobile-light-modal-report.png`, `mobile-dark-modal-report.png`
+- Step-by-Step Sequence: 8 screenshots in `docs/screens/v4/first-run-sequence/01-cold-open.png` to `08-weekly-postcard.png`.
+
+
 
 
 

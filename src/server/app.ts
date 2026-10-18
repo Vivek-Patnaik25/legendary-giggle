@@ -40,6 +40,8 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   app.register(cors, {
     origin: true,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Request-Id'],
   });
 
   // Cookies

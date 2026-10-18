@@ -12,6 +12,7 @@ import {
   Search,
   Sparkles,
   Check,
+  X,
 } from 'lucide-react';
 
 interface AddItemModalProps {
@@ -49,6 +50,22 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
   const [barcodeInput, setBarcodeInput] = useState('');
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [barcodeError, setBarcodeError] = useState('');
+
+  const handleQuickAddPreset = async (p: typeof PRESETS[0]) => {
+    const calculatedExpiry = estimateExpiryDate(p.category, p.location as any);
+    await addItem({
+      name: p.name,
+      category: p.category,
+      location: p.location,
+      quantity: p.qty,
+      unit: normaliseUnit(p.unit),
+      expiryDate: calculatedExpiry,
+      isLeftover: false,
+      isFrozen: p.location === 'freezer',
+      notes: '',
+    });
+    onClose();
+  };
 
   const handleSelectPreset = (p: typeof PRESETS[0]) => {
     setName(p.name);
@@ -147,6 +164,21 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
       maxWidth="max-w-lg"
     >
       <div className="space-y-4">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-stone-100 dark:border-stone-800">
+          <h3 className="font-serif font-bold text-base sm:text-lg text-stone-900 dark:text-stone-100">
+            Add to Fridge
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer"
+            aria-label="Close dialog"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
         {/* Navigation tabs */}
         <div className="flex rounded-lg bg-stone-100 dark:bg-stone-900/80 p-1 border border-stone-200 dark:border-stone-800 text-xs font-semibold">
           <button
@@ -189,32 +221,58 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
         {activeTab === 'presets' && (
           <div className="space-y-3">
             <p className="text-xs text-stone-600 dark:text-stone-400">
-              Tap a kitchen staple to populate estimated expiry and unit:
+              Tap any staple to add it instantly to your fridge:
             </p>
-            <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
+            <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
               {PRESETS.map((p, idx) => (
-                <button
+                <div
                   key={idx}
-                  type="button"
-                  onClick={() => handleSelectPreset(p)}
-                  className="p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/60 dark:bg-stone-900/40 hover:border-stone-400 dark:hover:border-stone-600 text-left transition cursor-pointer"
+                  className="p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/60 dark:bg-stone-900/40 hover:border-stone-400 dark:hover:border-stone-600 text-left transition flex flex-col justify-between group"
                 >
-                  <div className="font-semibold text-xs text-stone-900 dark:text-stone-100">
-                    {p.name}
+                  <div
+                    onClick={() => handleQuickAddPreset(p)}
+                    className="cursor-pointer"
+                  >
+                    <div className="font-semibold text-xs text-stone-900 dark:text-stone-100 group-hover:text-tomato transition-colors">
+                      {p.name}
+                    </div>
+                    <div className="text-[11px] text-stone-600 dark:text-stone-400 mt-0.5 capitalize">
+                      {formatQuantityWithUnit(p.qty, p.unit)} &bull; {p.location}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-stone-600 dark:text-stone-400 mt-0.5 capitalize">
-                    {formatQuantityWithUnit(p.qty, p.unit)} &bull; {p.location}
+                  <div className="mt-2 pt-1.5 border-t border-stone-200/60 dark:border-stone-800/60 flex items-center justify-between text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => handleQuickAddPreset(p)}
+                      className="px-2 py-0.5 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-950 font-semibold rounded-md shadow-2xs active:scale-95 cursor-pointer text-[10px]"
+                    >
+                      + Add
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPreset(p)}
+                      className="text-[10px] text-stone-500 hover:text-stone-900 dark:hover:text-stone-200 underline cursor-pointer"
+                    >
+                      Edit
+                    </button>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
-            <div className="pt-2 text-center">
+            <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs">
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 cursor-pointer font-medium"
+              >
+                Cancel
+              </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('manual')}
-                className="text-xs text-stone-600 dark:text-stone-400 underline hover:text-stone-900 dark:hover:text-stone-100 cursor-pointer"
+                className="text-stone-600 dark:text-stone-400 underline hover:text-stone-900 dark:hover:text-stone-100 cursor-pointer font-medium"
               >
-                Or enter custom item name
+                Or enter custom item name &rarr;
               </button>
             </div>
           </div>
@@ -248,6 +306,16 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose }) =
             {barcodeError && (
               <p className="text-[11px] text-tomato">{barcodeError}</p>
             )}
+
+            <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs">
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 cursor-pointer font-medium"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
 

@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext.js';
 import { AccessibleModal } from './AccessibleModal.js';
 import { cleanText, formatQuantityWithUnit } from '../utils/text.js';
 import { ChefHat, Check, Plus, Utensils, Clock, Users, X } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { trackLocalEvent } from '../analytics.js';
 
 interface RecipeModalProps {
   recipe: any | null;
@@ -20,10 +22,19 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
   const isGuest = currentHousehold?.role === 'guest';
 
   const handleCookThisRecipe = async () => {
+    let cookedCount = 0;
     if (recipe.usedPantryItems && recipe.usedPantryItems.length > 0) {
       for (const used of recipe.usedPantryItems) {
         await cookItem(used.id, Math.min(used.quantity, 1));
+        cookedCount++;
       }
+    }
+    trackLocalEvent('first_cook', { recipeId: recipe.id, recipeTitle: recipe.title }, currentHousehold?.id);
+    trackLocalEvent('items_used_per_week', { count: Math.max(cookedCount, 1) }, currentHousehold?.id);
+    try {
+      confetti({ particleCount: 75, spread: 65, origin: { y: 0.6 } });
+    } catch {
+      // ignore
     }
     onClose();
   };
@@ -142,16 +153,14 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
           >
             Close
           </button>
-          {!isGuest && (
-            <button
-              type="button"
-              onClick={handleCookThisRecipe}
-              className="px-4 py-2 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-950 font-semibold text-xs rounded-xl shadow-sm transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
-            >
-              <Utensils className="w-3.5 h-3.5" />
-              <span>Cook Dinner</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleCookThisRecipe}
+            className="px-4 py-2 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-950 font-semibold text-xs rounded-xl shadow-sm transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Utensils className="w-3.5 h-3.5" />
+            <span>Cook Dinner</span>
+          </button>
         </div>
       </div>
     </AccessibleModal>

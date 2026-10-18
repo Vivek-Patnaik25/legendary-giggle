@@ -238,6 +238,11 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       WHERE m.user_id = ? AND m.deleted_at IS NULL AND h.deleted_at IS NULL
     `).all(userId);
 
+    let sessionId = request.cookies?.pantry_session;
+    if (!sessionId && request.headers.authorization?.startsWith('Bearer ')) {
+      sessionId = request.headers.authorization.slice(7).trim();
+    }
+
     return reply.send({
       user: {
         id: user.id,
@@ -248,6 +253,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
         createdAt: user.created_at,
       },
       households,
+      token: sessionId,
     });
   });
 

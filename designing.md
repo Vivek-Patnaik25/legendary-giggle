@@ -736,6 +736,34 @@ Request #4:
   - Rewrites all client SPA routes (`/(.*)`) to `/index.html` for client-side navigation.
   - Verified live: `npx vercel curl https://pantry-rescue.vercel.app/health` returns HTTP 200 OK directly from backend database.
 
+---
+
+## 11. Interactive Button Functionality, Auth Resilience & Instant Presets
+
+This section documents the end-to-end audit, diagnosis, and resolution of user-facing button interactivity across mobile and desktop environments.
+
+### 11.1 Root Causes Identified
+1. **Cookie Partitioning & Proxy Authentication Gaps**: In Safari (ITP), mobile browsers with strict cross-site cookie policies, and edge proxy environments (Vercel rewrites to Render), `Set-Cookie` can be dropped or partitioned. Without bearer token persistence in client requests, requests returned 401 Unauthorized, causing `currentHousehold` to remain null and silently suppressing item additions and cooking operations.
+2. **Preset Onboarding Friction in Add Modal**: Tapping a preset chip previously redirected to the 6-field Manual Entry form rather than immediately adding the grocery item, giving users the impression that tapping the preset was non-functional. Furthermore, the modal lacked a dedicated header close (`X`) button on the presets screen.
+3. **Guest Restriction & Zero-State Inertia in Recipe Modal**: The "Cook Dinner" button was conditionally wrapped in `{!isGuest && ...}`. When a first-time guest user opened a recipe, no cook action was available. Additionally, cooking a recipe with 0 pantry items silently closed the modal without recording the cook event or triggering feedback.
+4. **Desktop / Mobile DOM Breakpoint Collision**: The desktop Add button was marked with `hidden sm:inline-flex` while the mobile bottom navigation bar was set to `md:hidden`, causing hidden button resolution conflicts on certain viewports.
+
+### 11.2 Architectural Solutions Applied
+1. **Centralized Bearer Token Client (`src/client/api.ts`)**:
+   - Implemented `apiFetch` which retrieves the active `pantry_token` from `localStorage` (with memory token fallback for headless/SSR test runners) and attaches `Authorization: Bearer <token>` alongside `credentials: 'include'`.
+   - Updated `AuthContext.tsx` and `PantryContext.tsx` to automatically persist the session token upon guest creation, login, or registration.
+2. **1-Tap Instant Presets (`src/client/components/AddItemModal.tsx`)**:
+   - Quick Presets now offer instantaneous 1-tap addition: tapping any staple (e.g. Fresh Milk, Eggs) immediately commits the item to the fridge with calculated expiry, closes the modal, and provides instant visual feedback.
+   - Preserved an explicit "Edit" button on each preset card for users wishing to customize quantities or dates beforehand.
+   - Added a clear dialog header with title "Add to Fridge" and an accessible close (`X`) button across all modal tabs.
+3. **Unconditional Recipe Cooking with Celebration (`src/client/components/RecipeModal.tsx`)**:
+   - Removed guest lock on the "Cook Dinner" action, allowing any user to cook recipes.
+   - Tapping "Cook Dinner" now deducts matching pantry items, tracks `first_cook` and `items_used_per_week` analytics events, and launches celebratory confetti.
+4. **Breakpoint Alignment & Fastify CORS (`src/client/components/Navbar.tsx`, `src/server/app.ts`)**:
+   - Aligned desktop Add button to `hidden md:inline-flex` matching the bottom bar's `md:hidden`.
+   - Explicitly configured Fastify CORS with allowed methods (`GET, POST, PUT, PATCH, DELETE, OPTIONS`) and headers (`Content-Type, Authorization, Idempotency-Key, X-Request-Id`).
+
+
 
 
 

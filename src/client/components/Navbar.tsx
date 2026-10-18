@@ -160,7 +160,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Add Item Action (Desktop) */}
             <button
               onClick={onOpenAddItem}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-900 text-xs font-semibold rounded-lg shadow-xs transition active:scale-95 cursor-pointer"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-stone-50 dark:text-stone-900 text-xs font-semibold rounded-lg shadow-xs transition active:scale-95 cursor-pointer"
               aria-label="Add item"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />

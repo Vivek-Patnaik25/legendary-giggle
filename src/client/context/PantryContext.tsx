@@ -5,6 +5,7 @@ import { queueMutation, flushSyncQueue, getPendingMutationsCount, purgeLocalHous
 import confetti from 'canvas-confetti';
 import { trackLocalEvent, checkDay1Return } from '../analytics.js';
 import { cleanText } from '../utils/text.js';
+import { apiFetch } from '../api.js';
 
 export interface PantryItem {
   id: string;
@@ -110,7 +111,7 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       if (navigator.onLine) {
         // Fetch items
-        const itemsRes = await fetch(`/api/households/${hhId}/items?status=active`);
+        const itemsRes = await apiFetch(`/api/households/${hhId}/items?status=active`);
         if (itemsRes.ok) {
           const data = await itemsRes.json();
           const cleanItems = (data.items || []).map((i: any) => ({
@@ -131,7 +132,7 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         // Fetch top 3 rescue recipes
-        const rescueRes = await fetch(`/api/households/${hhId}/recipes/rescue`);
+        const rescueRes = await apiFetch(`/api/households/${hhId}/recipes/rescue`);
         if (rescueRes.ok) {
           const rData = await rescueRes.json();
           const cleanRecipes = (rData.recipes || []).map((r: any) => ({
@@ -150,21 +151,21 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
 
         // Fetch smart shopping hints
-        const hintsRes = await fetch(`/api/households/${hhId}/recipes/shopping-hints`);
+        const hintsRes = await apiFetch(`/api/households/${hhId}/recipes/shopping-hints`);
         if (hintsRes.ok) {
           const hData = await hintsRes.json();
           setShoppingHints(hData.hints || []);
         }
 
         // Fetch scoreboard
-        const sbRes = await fetch(`/api/households/${hhId}/scoreboard`);
+        const sbRes = await apiFetch(`/api/households/${hhId}/scoreboard`);
         if (sbRes.ok) {
           const sbData = await sbRes.json();
           setScoreboard(sbData.scoreboard || null);
         }
 
         // Fetch badges
-        const bRes = await fetch(`/api/households/${hhId}/badges`);
+        const bRes = await apiFetch(`/api/households/${hhId}/badges`);
         if (bRes.ok) {
           const bData = await bRes.json();
           setBadges(bData.badges || []);
@@ -219,14 +220,25 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [currentHousehold, refreshPantry]);
 
+  // Helper to ensure current household is available
+  const getHouseholdId = async (): Promise<string | null> => {
+    if (currentHousehold?.id) return currentHousehold.id;
+    try {
+      await refreshAuth();
+    } catch {
+      // ignore
+    }
+    return currentHousehold?.id || null;
+  };
+
   // Actions
   const addItem = async (payload: any) => {
-    if (!currentHousehold) return;
-    const hhId = currentHousehold.id;
+    const hhId = await getHouseholdId();
+    if (!hhId) return;
     const key = crypto.randomUUID();
 
     if (navigator.onLine) {
-      const res = await fetch(`/api/households/${hhId}/items`, {
+      const res = await apiFetch(`/api/households/${hhId}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
         body: JSON.stringify(payload),
@@ -249,12 +261,12 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const editItem = async (itemId: string, payload: any) => {
-    if (!currentHousehold) return;
-    const hhId = currentHousehold.id;
+    const hhId = await getHouseholdId();
+    if (!hhId) return;
     const key = crypto.randomUUID();
 
     if (navigator.onLine) {
-      const res = await fetch(`/api/households/${hhId}/items/${itemId}`, {
+      const res = await apiFetch(`/api/households/${hhId}/items/${itemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
         body: JSON.stringify(payload),
@@ -276,12 +288,12 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const cookItem = async (itemId: string, amount?: number) => {
-    if (!currentHousehold) return;
-    const hhId = currentHousehold.id;
+    const hhId = await getHouseholdId();
+    if (!hhId) return;
     const key = crypto.randomUUID();
 
     if (navigator.onLine) {
-      const res = await fetch(`/api/households/${hhId}/items/${itemId}/cook`, {
+      const res = await apiFetch(`/api/households/${hhId}/items/${itemId}/cook`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
         body: JSON.stringify({ amount }),
@@ -315,12 +327,12 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const wasteItem = async (itemId: string, amount?: number) => {
-    if (!currentHousehold) return;
-    const hhId = currentHousehold.id;
+    const hhId = await getHouseholdId();
+    if (!hhId) return;
     const key = crypto.randomUUID();
 
     if (navigator.onLine) {
-      await fetch(`/api/households/${hhId}/items/${itemId}/waste`, {
+      await apiFetch(`/api/households/${hhId}/items/${itemId}/waste`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
         body: JSON.stringify({ amount }),
@@ -342,12 +354,12 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const deleteItem = async (itemId: string, markAsConsumed = false) => {
-    if (!currentHousehold) return;
-    const hhId = currentHousehold.id;
+    const hhId = await getHouseholdId();
+    if (!hhId) return;
     const key = crypto.randomUUID();
 
     if (navigator.onLine) {
-      await fetch(`/api/households/${hhId}/items/${itemId}?markAsConsumed=${markAsConsumed}`, {
+      await apiFetch(`/api/households/${hhId}/items/${itemId}?markAsConsumed=${markAsConsumed}`, {
         method: 'DELETE',
       });
     } else {
@@ -365,9 +377,9 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const claimItem = async (itemId: string, claim = true) => {
-    if (!currentHousehold) return;
-    const hhId = currentHousehold.id;
-    await fetch(`/api/households/${hhId}/items/${itemId}/claim`, {
+    const hhId = await getHouseholdId();
+    if (!hhId) return;
+    await apiFetch(`/api/households/${hhId}/items/${itemId}/claim`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ claim }),

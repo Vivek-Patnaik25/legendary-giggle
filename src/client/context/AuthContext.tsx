@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+import { apiFetch, setAuthToken, clearAuthToken } from '../api.js';
+
 export interface User {
   id: string;
   email: string;
@@ -38,9 +40,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshAuth = async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await apiFetch('/api/auth/me');
       if (res.ok) {
         const data = await res.json();
+        if (data.token) setAuthToken(data.token);
         setUser(data.user);
         setHouseholds(data.households || []);
         if (data.households && data.households.length > 0) {
@@ -56,9 +59,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } else {
         // Automatically start in guest mode for seamless first-open trial
-        const guestRes = await fetch('/api/auth/guest', { method: 'POST' });
+        const guestRes = await apiFetch('/api/auth/guest', { method: 'POST' });
         if (guestRes.ok) {
           const guestData = await guestRes.json();
+          if (guestData.token) setAuthToken(guestData.token);
           setUser(guestData.user);
           setHouseholds(guestData.households || []);
           setCurrentHousehold(guestData.households?.[0] || null);
@@ -80,7 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
+    const res = await apiFetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -91,11 +95,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(err.message || 'Login failed');
     }
 
+    const data = await res.json();
+    if (data.token) setAuthToken(data.token);
     await refreshAuth();
   };
 
   const register = async (email: string, password: string, displayName: string) => {
-    const res = await fetch('/api/auth/register', {
+    const res = await apiFetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, displayName }),
@@ -106,11 +112,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(err.message || 'Registration failed');
     }
 
+    const data = await res.json();
+    if (data.token) setAuthToken(data.token);
     await refreshAuth();
   };
 
   const claimGuest = async (email: string, password: string, displayName?: string) => {
-    const res = await fetch('/api/auth/claim-guest', {
+    const res = await apiFetch('/api/auth/claim-guest', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, displayName }),
@@ -121,15 +129,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(err.message || 'Account creation failed');
     }
 
+    const data = await res.json();
+    if (data.token) setAuthToken(data.token);
     await refreshAuth();
   };
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await apiFetch('/api/auth/logout', { method: 'POST' });
     } catch {
       // ignore
     }
+    clearAuthToken();
     // After logging out, refreshAuth automatically sets up a clean guest session
     await refreshAuth();
   };

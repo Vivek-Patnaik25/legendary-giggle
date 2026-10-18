@@ -510,3 +510,14 @@ Request #4:
   4. **Keyboard Navigation**: Validated Tab, Enter, and Escape modal control.
   5. **Forbidden Token DOM Scan**: 0 occurrences of `[object`, `undefined`, `NaN`, or `&amp;` across all views and modals.
 
+---
+
+## 7. Design Review V4 Enhancements
+
+### 7.1 Group 1: Dark Mode Tokens on Today & Mobile Clearance
+- **Defined Theme Tokens**: Added `--color-stone-850: #171412;` to Tailwind `@theme` in `src/client/index.css`.
+- **Theme Surfaces on Today**: Replaced unmapped classes in `TodayView.tsx` with active semantic tokens (`dark:bg-stone-900` / `dark:bg-stone-850`, `border-stone-200 dark:border-stone-800`) across the Sir Expiry header panel, expiring item cards, and cook tonight cards.
+- **Mascot Quote Legibility**: Confirmed quote text uses `text-stone-900 dark:text-stone-100` (`#1C1917` on light `#FAF7F2` and `#EDE8E0` on dark `#171412`), giving > 12:1 WCAG AAA contrast in both modes.
+- **Mobile Bottom Clearance**: Increased scroll container bottom padding to `pb-56 sm:pb-32` in `TodayView.tsx` and `FridgeView.tsx`, providing over 220px of scroll room so the floating Add button never covers a card's "Use" button on 375px mobile screens.
+
+

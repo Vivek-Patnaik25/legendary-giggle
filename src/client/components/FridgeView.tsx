@@ -78,7 +78,7 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
   };
 
   return (
-    <div className="space-y-6 pb-36 sm:pb-24">
+    <div className="space-y-6 pb-56 sm:pb-32">
       {/* Header controls: Search & Sort */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">

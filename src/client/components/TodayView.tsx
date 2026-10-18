@@ -75,9 +75,9 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
   }
 
   return (
-    <div className="space-y-8 pb-36 sm:pb-24">
+    <div className="space-y-8 pb-56 sm:pb-32">
       {/* 1. Restrained Sir Expiry Header (Touchpoint 1 of 3) */}
-      <section className="bg-stone-100 dark:bg-stone-850 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 sm:p-6 transition-all">
+      <section className="bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 sm:p-6 transition-all">
         <div className="flex items-center gap-4 sm:gap-5">
           <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center">
             <img
@@ -180,14 +180,14 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
             {expiringSoon.map((item) => (
               <div
                 key={item.id}
-                className="bg-white dark:bg-stone-850 border border-stone-200 dark:border-stone-800 rounded-xl p-4 shadow-sm hover:border-stone-300 dark:hover:border-stone-700 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-4 shadow-sm hover:border-stone-300 dark:hover:border-stone-700 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div className="space-y-2 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-display font-medium text-base text-stone-900 dark:text-stone-100">
                       {cleanText(item.name)}
                     </span>
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-medium capitalize border border-stone-200 dark:border-stone-700">
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-semibold capitalize border border-stone-200 dark:border-stone-700">
                       {item.location}
                     </span>
                     <span className="text-xs text-stone-600 dark:text-stone-400">
@@ -234,7 +234,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
             {rescueRecipes.map((recipe) => (
               <div
                 key={recipe.id}
-                className="bg-white dark:bg-stone-850 border border-stone-200 dark:border-stone-800 rounded-xl p-4 shadow-sm hover:border-stone-300 dark:hover:border-stone-700 transition flex flex-col justify-between space-y-4"
+                className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-4 shadow-sm hover:border-stone-300 dark:hover:border-stone-700 transition flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-stone-600 dark:text-stone-400">

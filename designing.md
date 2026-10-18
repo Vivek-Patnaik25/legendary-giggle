@@ -335,6 +335,22 @@ The redesigned UI was tested and validated end-to-end via Playwright and Axe Cor
    - *Root Cause:* Mascot and badge image assets were JPEGs saved with a `.png` extension, resulting in opaque white background boxes that clipped on cream and dark modes.
    - *Fix:* Developed `scripts/make-transparent.ts` using `sharp` to execute boundary flood-fill alpha masking on `sir_expiry_calm.png`, `sir_expiry_worried.png`, `sir_expiry_panicked.png`, `logo.png`, `badge_onion_survivor.png`, and `badge_freezer_archaeologist.png`, converting them to true 32-bit RGBA PNGs (colorType 6) with soft edge antialiasing.
 
+### 3.11 Design Review Fixes: Layout & Navigation (Group 2)
+
+5. **Scrollable Screen Bottom Padding (375px Mobile Viewport):**
+   - *Issue:* The floating `Add Item` button (anchored `bottom-20` on mobile) and fixed bottom navigation bar (height `h-16`) hovered over the bottom cards on scrollable screens when users reached the end of the page.
+   - *Fix:* Increased bottom padding across all primary scrollable views (`TodayView.tsx`, `FridgeView.tsx`, `WinsView.tsx`) to `pb-36 sm:pb-24` (144px mobile, 96px desktop). This provides generous clearance (>140px) at the base of every page, guaranteeing that the floating Add button and bottom nav never obscure card content or action buttons even at 375px wide.
+6. **Removal of Misleading "Save fridge" Header Button:**
+   - *Issue:* The header contained a "Save fridge" button for guest users, misleading users into believing the app required manual saves or that data would be lost without clicking it.
+   - *Fix:* Removed the button completely from `Navbar.tsx` since Pantry Rescue automatically persists every pantry change, quantity edit, meal rescue, and streak event immediately to SQLite and offline IndexedDB. Made `HouseholdSettingsModal.tsx` accessible to all users (including guests) with an explicit autosave status banner ("Guest Kitchen: All items, rescues, and streaks are automatically saved on this device") and an optional "Claim kitchen" action for multi-device sync.
+7. **Fridge Card Action Clarity (Labeled Actions & Single Overflow Menu):**
+   - *Issue:* Fridge cards displayed four unlabeled, ambiguous icon buttons (Snowflake, Bookmark, Utensils, Trash2) that forced users to guess their actions or rely on desktop tooltips.
+   - *Fix:* Streamlined the card action bar with:
+     - A prominent, tactile **"Use"** button with a chef/utensils icon for the primary action (cooking / rescuing).
+     - A single clean **overflow menu (`•••`)** trigger with accessible `aria-haspopup` and `aria-expanded` attributes.
+     - A contextual dropdown menu with unambiguous labeled actions: "Freeze to Preserve" / "Move to Fridge" (Snowflake), "Claim for Me" / "Unclaim Item" (Bookmark), and "Discard (Waste)" (Trash2 with rose styling).
+   - *Verification:* Verified on mobile (375px) and desktop layouts. All actions close the menu immediately upon selection or backdrop dismissal.
+
 ---
 
 ## 4. Load Test Results & Known Gaps

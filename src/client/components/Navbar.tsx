@@ -12,7 +12,6 @@ import {
   Sparkles,
   Layers,
   Trophy,
-  Save,
   ChevronDown,
 } from 'lucide-react';
 
@@ -107,36 +106,25 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Controls */}
           <div className="flex items-center gap-2">
             {/* Guest Claim Prompt */}
-            {isGuest ? (
-              <button
-                onClick={onOpenClaim}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 hover:opacity-90 transition cursor-pointer"
-                title="Save this kitchen across devices"
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Save fridge</span>
-              </button>
-            ) : (
-              /* Household selector for registered users */
-              households.length > 1 && (
-                <div className="hidden sm:flex items-center gap-1 text-xs text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-900 px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800">
-                  <select
-                    value={currentHousehold?.id}
-                    onChange={(e) => {
-                      const sel = households.find(h => h.id === e.target.value);
-                      if (sel) setCurrentHousehold(sel);
-                    }}
-                    className="bg-transparent outline-none cursor-pointer text-xs pr-1"
-                    aria-label="Select household"
-                  >
-                    {households.map(h => (
-                      <option key={h.id} value={h.id} className="bg-stone-100 dark:bg-stone-900">
-                        {h.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )
+            {/* Household selector for registered users */}
+            {households.length > 1 && (
+              <div className="hidden sm:flex items-center gap-1 text-xs text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-900 px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800">
+                <select
+                  value={currentHousehold?.id}
+                  onChange={(e) => {
+                    const sel = households.find(h => h.id === e.target.value);
+                    if (sel) setCurrentHousehold(sel);
+                  }}
+                  className="bg-transparent outline-none cursor-pointer text-xs pr-1"
+                  aria-label="Select household"
+                >
+                  {households.map(h => (
+                    <option key={h.id} value={h.id} className="bg-stone-100 dark:bg-stone-900">
+                      {h.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
 
             {/* Online / Offline Sync status pill */}
@@ -168,17 +156,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
-            {/* Settings (if not guest or registered) */}
-            {!isGuest && (
-              <button
-                onClick={onOpenSettings}
-                className="p-1.5 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer"
-                title="Household settings & invites"
-                aria-label="Household settings"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-            )}
+            {/* Household Settings */}
+            <button
+              onClick={onOpenSettings}
+              className="p-1.5 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer"
+              title="Household settings & invites"
+              aria-label="Household settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
 
             {/* Dark Mode Toggle */}
             <button

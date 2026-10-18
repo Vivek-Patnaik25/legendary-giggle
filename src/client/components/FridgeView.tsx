@@ -14,6 +14,7 @@ import {
   Trash2,
   PackageOpen,
   X,
+  MoreHorizontal,
 } from 'lucide-react';
 
 interface FridgeViewProps {
@@ -27,6 +28,7 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'fridge' | 'freezer' | 'pantry' | 'leftovers'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'urgency' | 'expiry' | 'name'>('urgency');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const isGuest = currentHousehold?.role === 'guest';
 
@@ -76,7 +78,7 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
   };
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-36 sm:pb-24">
       {/* Header controls: Search & Sort */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
@@ -260,51 +262,81 @@ export const FridgeView: React.FC<FridgeViewProps> = ({ onOpenAddItem }) => {
                     </button>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleToggleFreeze(item)}
-                      className={`p-1.5 rounded-lg border transition cursor-pointer ${
-                        item.is_frozen
-                          ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800'
-                          : 'text-stone-400 hover:text-sky-600 dark:hover:text-sky-400 border-transparent hover:bg-stone-100 dark:hover:bg-stone-800'
-                      }`}
-                      title={item.is_frozen ? 'Move back to fridge' : 'Freeze to preserve'}
-                      aria-label="Toggle frozen state"
-                    >
-                      <Snowflake className="w-3.5 h-3.5" />
-                    </button>
-
-                    <button
-                      onClick={() => claimItem(item.id, !item.claimed_by_name)}
-                      className={`p-1.5 rounded-lg border transition cursor-pointer ${
-                        item.claimed_by_name
-                          ? 'bg-stone-200 dark:bg-stone-700 text-stone-800 dark:text-stone-200 border-stone-300 dark:border-stone-600'
-                          : 'text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 border-transparent hover:bg-stone-100 dark:hover:bg-stone-800'
-                      }`}
-                      title={item.claimed_by_name ? 'Unclaim item' : 'Claim for me'}
-                      aria-label="Claim item"
-                    >
-                      <Bookmark className="w-3.5 h-3.5" />
-                    </button>
-
+                  {/* Labeled Primary Action & Single Overflow Menu */}
+                  <div className="flex items-center gap-1.5 relative">
+                    {/* Primary Labeled Action: Use */}
                     <button
                       onClick={() => cookItem(item.id, item.current_quantity)}
-                      className="p-1.5 text-stone-500 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800/60 transition cursor-pointer"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-950 hover:bg-stone-800 dark:hover:bg-white transition cursor-pointer active:scale-95 shadow-xs"
                       title="Cook or use item (Counts as rescue)"
                       aria-label={`Use ${item.name}`}
                     >
-                      <Utensils className="w-3.5 h-3.5" />
+                      <Utensils className="w-3.5 h-3.5 text-amber-400 dark:text-amber-600" />
+                      <span>Use</span>
                     </button>
 
+                    {/* Single Overflow Menu Trigger */}
                     <button
-                      onClick={() => wasteItem(item.id, item.current_quantity)}
-                      className="p-1.5 text-stone-400 hover:text-tomato rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 dark:hover:border-rose-900/60 transition cursor-pointer"
-                      title="Discard (Record as waste)"
-                      aria-label={`Discard ${item.name}`}
+                      onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
+                      className="p-1.5 rounded-lg border border-stone-200 dark:border-stone-700 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer"
+                      aria-label={`More actions for ${item.name}`}
+                      aria-haspopup="true"
+                      aria-expanded={openMenuId === item.id}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <MoreHorizontal className="w-4 h-4" />
                     </button>
+
+                    {/* Overflow Dropdown */}
+                    {openMenuId === item.id && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-20"
+                          onClick={() => setOpenMenuId(null)}
+                        />
+                        <div
+                          role="menu"
+                          className="absolute right-0 bottom-full mb-1 z-30 min-w-[175px] bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl shadow-xl py-1 text-xs animate-in fade-in duration-100"
+                        >
+                          <button
+                            role="menuitem"
+                            onClick={() => {
+                              handleToggleFreeze(item);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 flex items-center gap-2 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition text-left cursor-pointer"
+                          >
+                            <Snowflake className="w-3.5 h-3.5 text-sky-500" />
+                            <span>{item.is_frozen ? 'Move to Fridge' : 'Freeze to Preserve'}</span>
+                          </button>
+
+                          <button
+                            role="menuitem"
+                            onClick={() => {
+                              claimItem(item.id, !item.claimed_by_name);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 flex items-center gap-2 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition text-left cursor-pointer"
+                          >
+                            <Bookmark className="w-3.5 h-3.5 text-amber-500" />
+                            <span>{item.claimed_by_name ? 'Unclaim Item' : 'Claim for Me'}</span>
+                          </button>
+
+                          <div className="my-1 border-t border-stone-100 dark:border-stone-800" />
+
+                          <button
+                            role="menuitem"
+                            onClick={() => {
+                              wasteItem(item.id, item.current_quantity);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-3 py-2 flex items-center gap-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition text-left cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Discard (Waste)</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

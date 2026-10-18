@@ -16,10 +16,11 @@ import {
 interface HouseholdSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenClaim?: () => void;
 }
 
-export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ isOpen, onClose }) => {
-  const { currentHousehold, refreshAuth } = useAuth();
+export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ isOpen, onClose, onOpenClaim }) => {
+  const { user, currentHousehold, refreshAuth } = useAuth();
 
   const [members, setMembers] = useState<any[]>([]);
   const [invites, setInvites] = useState<any[]>([]);
@@ -127,6 +128,8 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
     setTimeout(() => setCopiedCode(null), 2500);
   };
 
+  const isGuest = user?.isGuest || currentHousehold?.role === 'guest';
+
   return (
     <AccessibleModal
       isOpen={isOpen}
@@ -135,6 +138,28 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({ 
       maxWidth="max-w-lg"
     >
       <div className="space-y-6">
+        {/* Guest Autosave Info & Claim Action */}
+        {isGuest && (
+          <div className="bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <span className="text-xs font-semibold text-stone-900 dark:text-stone-100">
+                Guest Kitchen (Autosaved)
+              </span>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed">
+                All food items, rescues, and streaks are automatically saved on this device. Create an account to invite family members or access on other devices.
+              </p>
+            </div>
+            {onOpenClaim && (
+              <button
+                type="button"
+                onClick={onOpenClaim}
+                className="self-start sm:self-center px-3 py-1.5 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-xs font-semibold rounded-lg hover:opacity-90 transition cursor-pointer shrink-0"
+              >
+                Claim kitchen
+              </button>
+            )}
+          </div>
+        )}
         {/* Waste Reduction Target */}
         <section className="space-y-3">
           <div className="flex items-center gap-2">

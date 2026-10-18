@@ -77,7 +77,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
   };
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8 pb-36 sm:pb-24">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-5">
         <div>

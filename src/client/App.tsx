@@ -131,6 +131,11 @@ export const App: React.FC = () => {
       <HouseholdSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        onOpenClaim={() => {
+          setIsSettingsOpen(false);
+          setAuthModalMode('claim');
+          setIsAuthModalOpen(true);
+        }}
       />
 
       <AuthModal

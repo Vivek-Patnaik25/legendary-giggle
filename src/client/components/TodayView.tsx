@@ -75,7 +75,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
   }
 
   return (
-    <div className="space-y-8 pb-20 md:pb-8">
+    <div className="space-y-8 pb-36 sm:pb-24">
       {/* 1. Restrained Sir Expiry Header (Touchpoint 1 of 3) */}
       <section className="bg-stone-100 dark:bg-stone-850 border border-stone-200 dark:border-stone-800 rounded-2xl p-5 sm:p-6 transition-all">
         <div className="flex items-center gap-4 sm:gap-5">

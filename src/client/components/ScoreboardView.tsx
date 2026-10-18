@@ -139,7 +139,7 @@ export const ScoreboardView: React.FC<ScoreboardViewProps> = ({ onOpenReport }) 
                   <img
                     src={badge.icon}
                     alt={badge.title}
-                    className={`w-full h-full object-cover rounded-lg ${!badge.isUnlocked ? 'grayscale blur-[1px]' : ''}`}
+                    className={`w-full h-full object-cover rounded-lg ${!badge.isUnlocked ? 'opacity-40' : ''}`}
                   />
                 ) : (
                   <Award className="w-8 h-8 text-amber-400" />

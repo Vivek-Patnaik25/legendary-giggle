@@ -117,6 +117,7 @@ export interface ScoreboardData {
   scorePercentage: number;
   streakWeeks: number;
   recentEvents: any[];
+  isDemoData?: boolean;
 }
 
 /**
@@ -146,9 +147,13 @@ export function calculateHouseholdScoreboard(householdId: string): ScoreboardDat
   const scorePercentage = total === 0 ? 100 : Math.round((rescuedCount / total) * 100);
 
   // Approximate streak calculation (consecutive weeks under target)
-  let streakWeeks = isPactMet ? 1 : 0;
-  if (rescuedCount >= 3) {
-    streakWeeks = Math.min(12, streakWeeks + Math.floor(rescuedCount / 3));
+  // Fresh households with zero activity start at 0 weeks
+  let streakWeeks = 0;
+  if (rescuedCount > 0 || wastedCount > 0) {
+    streakWeeks = isPactMet ? 1 : 0;
+    if (rescuedCount >= 3) {
+      streakWeeks = Math.min(12, streakWeeks + Math.floor(rescuedCount / 3));
+    }
   }
 
   // Recent 10 events (excluding sub-gram 1g micro entries)
@@ -161,6 +166,10 @@ export function calculateHouseholdScoreboard(householdId: string): ScoreboardDat
     LIMIT 10
   `).all(householdId);
 
+  const isDemoData = recentEvents.some(
+    (e: any) => e.id?.startsWith('evt-') || e.is_demo === 1 || e.is_demo === true
+  );
+
   return {
     weekStart,
     rescuedCount,
@@ -170,6 +179,7 @@ export function calculateHouseholdScoreboard(householdId: string): ScoreboardDat
     scorePercentage,
     streakWeeks,
     recentEvents,
+    isDemoData,
   };
 }
 

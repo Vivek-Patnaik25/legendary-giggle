@@ -366,6 +366,19 @@ The redesigned UI was tested and validated end-to-end via Playwright and Axe Cor
    - *Root Cause:* If an ingredient was marked `optional: true` and missing, it was excluded from `missingIngredients` in `recipeEngine.ts`, creating a count mismatch between the card's `missingCount` and the modal checklist.
    - *Fix:* Updated `rankRescueRecipes` in `src/server/services/recipeEngine.ts` to ensure every ingredient in `recipe.ingredients` is either in `usedPantryItems` or in `missingIngredients`. Thus, `usedPantryItems.length + missingIngredients.length === recipe.ingredients.length` holds universally. Recipe cards display `Uses N from your fridge` and `Needs M: [ingredients]`, matching the modal's `N in fridge • M needed` breakdown.
 
+### 3.13 Design Review Fixes: Badges & Demo Data (Group 4)
+
+12. **Locked Badge Visual Polish (Full Colour at Reduced Opacity):**
+    - *Fix:* Removed `grayscale` and `blur` filters from locked badge artwork in `WinsView.tsx` and `ScoreboardView.tsx`. Locked badges now render their true illustrated artwork in full colour with `opacity-40` on a neutral background, eliminating the unpolished blurred grey look while maintaining clear unearned status.
+13. **Distinct Progress Bar Colors ("In Progress" vs "Complete"):**
+    - *Fix:* Replaced identical grey bars with semantically distinct colors:
+      - **Complete / Unlocked:** Vibrant emerald (`bg-emerald-500`) with an "Earned" badge tag.
+      - **In Progress:** Warm amber (`bg-amber-500`) with an explicit percentage pill (`{prog.percent}%`).
+      - **Not Started (0%):** Subtle empty track (`bg-transparent` inside `bg-stone-100 dark:bg-stone-800`).
+14. **Fresh Household vs Seeded Demo Data Disambiguation:**
+    - *Fresh Household Baseline:* Updated `calculateHouseholdScoreboard` in `src/server/services/gamification.ts` so brand new households with 0 rescues and 0 waste start strictly at `0 weeks` streak (rather than defaulting to 1) and an empty recent activity state explaining that rescues will populate as cooking occurs.
+    - *Seeded Demo Data Labeling:* When test or review suites seed sample events or items into the database, `WinsView.tsx` surfaces an explicit `"Demo Data"` pill on the Recent Activity section and a subtle `Demo` tag on the streak metric, making it immediately transparent that the numbers represent sample walkthrough data.
+
 ---
 
 ## 4. Load Test Results & Known Gaps

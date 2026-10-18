@@ -109,8 +109,13 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
             <span className="text-xs font-medium">Rescue Streak</span>
             <Flame className="w-4 h-4 text-apricot" />
           </div>
-          <div className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100">
-            {pluralize(streak, 'week')}
+          <div className="font-serif text-2xl font-bold text-stone-900 dark:text-stone-100 flex items-baseline gap-1.5">
+            <span>{pluralize(streak, 'week')}</span>
+            {scoreboard?.isDemoData && streak > 0 && (
+              <span className="text-[10px] font-sans font-medium px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-500 border border-stone-200 dark:border-stone-700">
+                Demo
+              </span>
+            )}
           </div>
           <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
             Consecutive weeks below waste limit
@@ -202,7 +207,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
                       <img
                         src={badge.icon}
                         alt={badge.title}
-                        className={`w-full h-full object-cover rounded-lg ${!badge.isUnlocked ? 'grayscale opacity-40' : ''}`}
+                        className={`w-full h-full object-cover rounded-lg ${!badge.isUnlocked ? 'opacity-40' : ''}`}
                       />
                     ) : (
                       <Trophy className="w-5 h-5 text-stone-400" />
@@ -218,6 +223,10 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
                         <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800/50 shrink-0">
                           Earned
                         </span>
+                      ) : prog.percent > 0 ? (
+                        <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800/50 shrink-0">
+                          {prog.percent}%
+                        </span>
                       ) : (
                         <Lock className="w-3 h-3 text-stone-400 shrink-0" />
                       )}
@@ -228,7 +237,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
                   </div>
                 </div>
 
-                {/* Progress bar */}
+                {/* Progress bar with distinct colors: Emerald for complete, Amber for in-progress */}
                 <div className="mt-3.5 pt-2 border-t border-stone-100 dark:border-stone-800/80">
                   <div className="flex items-center justify-between text-[10px] text-stone-500 mb-1">
                     <span>{prog.label}</span>
@@ -239,7 +248,11 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
                   <div className="w-full h-1.5 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${
-                        badge.isUnlocked ? 'bg-amber-500' : 'bg-stone-400 dark:bg-stone-600'
+                        badge.isUnlocked
+                          ? 'bg-emerald-500'
+                          : prog.percent > 0
+                          ? 'bg-amber-500'
+                          : 'bg-transparent'
                       }`}
                       style={{ width: `${prog.percent}%` }}
                     />
@@ -259,7 +272,7 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
           return !(isGram && qty <= 1);
         });
 
-        if (visibleEvents.length === 0) return null;
+        const isDemo = scoreboard?.isDemoData || visibleEvents.some((e: any) => e.id?.startsWith('evt-'));
 
         return (
           <section className="space-y-3 pt-4 border-t border-stone-200 dark:border-stone-800">
@@ -268,29 +281,40 @@ export const WinsView: React.FC<WinsViewProps> = ({ onOpenReport }) => {
               <h3 className="font-serif text-base font-bold text-stone-900 dark:text-stone-100">
                 Recent Activity
               </h3>
+              {isDemo && visibleEvents.length > 0 && (
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 border border-stone-200 dark:border-stone-700">
+                  Demo Data
+                </span>
+              )}
             </div>
 
-            <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/60 divide-y divide-stone-100 dark:divide-stone-800/80 text-xs">
-              {visibleEvents.map((evt: any) => (
-                <div key={evt.id} className="p-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${
-                      evt.event_type === 'rescued' ? 'bg-emerald-500' : 'bg-tomato'
-                    }`} />
-                    <span className="text-stone-700 dark:text-stone-300 truncate">
-                      <strong className="font-semibold text-stone-900 dark:text-stone-100">
-                        {evt.user_name || 'Member'}
-                      </strong>{' '}
-                      {evt.event_type === 'rescued' ? 'rescued' : 'discarded'}{' '}
-                      <strong className="font-semibold text-stone-900 dark:text-stone-100">
-                        {formatQuantityWithUnit(evt.quantity, evt.unit)}
-                      </strong>
-                    </span>
+            {visibleEvents.length > 0 ? (
+              <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/60 divide-y divide-stone-100 dark:divide-stone-800/80 text-xs">
+                {visibleEvents.map((evt: any) => (
+                  <div key={evt.id} className="p-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${
+                        evt.event_type === 'rescued' ? 'bg-emerald-500' : 'bg-tomato'
+                      }`} />
+                      <span className="text-stone-700 dark:text-stone-300 truncate">
+                        <strong className="font-semibold text-stone-900 dark:text-stone-100">
+                          {evt.user_name || 'Member'}
+                        </strong>{' '}
+                        {evt.event_type === 'rescued' ? 'rescued' : 'discarded'}{' '}
+                        <strong className="font-semibold text-stone-900 dark:text-stone-100">
+                          {formatQuantityWithUnit(evt.quantity, evt.unit)}
+                        </strong>
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400 shrink-0">{evt.date}</span>
                   </div>
-                  <span className="text-[11px] text-stone-500 dark:text-stone-400 shrink-0">{evt.date}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-stone-200 dark:border-stone-800 p-6 text-center text-xs text-stone-400">
+                No food rescues or waste logged yet this week. Use or cook ingredients to record household rescues.
+              </div>
+            )}
           </section>
         );
       })()}

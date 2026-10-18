@@ -535,6 +535,11 @@ Request #4:
 - **Wording Parity**: Updated progress label to match the 7-day waste limit unlock rule (`X of 7 days below waste limit`).
 - **Added Automated Test**: Added unit test suite in `tests/client/badges.test.ts` asserting that locked progress is never 100% across all 7 days of the week, resets to 0% upon waste violation, and shows 100% / "Unlocked" only when unlocked.
 
+### 7.4 Group 4: Video Format Integrity & Cleanup
+- **FFprobe Verification**: Confirmed recording container and codec via `ffprobe` (`Input #0, matroska,webm, from 'docs/screens/v3/first-run.webm': Video: vp9, 1280x800, 25 fps, duration 29.32s`).
+- **Removed Duplicate**: Deleted the misnamed duplicate `docs/screens/v3/first-run.mp4`, maintaining the authentic WebM recording.
+
+
 
 
 

@@ -3,7 +3,7 @@ import { usePantry } from '../context/PantryContext.js';
 import { useAuth } from '../context/AuthContext.js';
 import { AccessibleModal } from './AccessibleModal.js';
 import { cleanText } from '../utils/text.js';
-import { ChefHat, Check, Plus, Utensils, Clock, Users } from 'lucide-react';
+import { ChefHat, Check, Plus, Utensils, Clock, Users, X } from 'lucide-react';
 
 interface RecipeModalProps {
   recipe: any | null;
@@ -45,9 +45,23 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({ recipe, isOpen, onClos
       isOpen={isOpen}
       onClose={onClose}
       title={cleanText(recipe.title)}
-      maxWidth="max-w-xl"
+      maxWidthClass="max-w-xl"
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
+        {/* Title above category tags */}
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="font-serif text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100 leading-snug">
+            {cleanText(recipe.title)}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer shrink-0"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
         {/* Metadata row */}
         <div className="flex items-center gap-3 text-xs text-stone-500 pb-3 border-b border-stone-100 dark:border-stone-800">
           <span className="px-2 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium capitalize">

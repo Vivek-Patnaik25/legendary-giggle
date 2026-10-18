@@ -6,6 +6,7 @@ interface AccessibleModalProps {
   title: string;
   children: React.ReactNode;
   maxWidthClass?: string;
+  maxWidth?: string;
 }
 
 export const AccessibleModal: React.FC<AccessibleModalProps> = ({
@@ -13,8 +14,10 @@ export const AccessibleModal: React.FC<AccessibleModalProps> = ({
   onClose,
   title,
   children,
-  maxWidthClass = 'max-w-xl',
+  maxWidthClass,
+  maxWidth,
 }) => {
+  const widthClass = maxWidthClass || maxWidth || 'max-w-xl';
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -90,7 +93,7 @@ export const AccessibleModal: React.FC<AccessibleModalProps> = ({
     >
       <div
         ref={modalRef}
-        className={`relative w-full ${maxWidthClass} rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-2xl p-5 sm:p-6 text-stone-900 dark:text-stone-100 max-h-[90vh] overflow-y-auto space-y-5`}
+        className={`relative w-full ${widthClass} rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-2xl p-5 sm:p-6 text-stone-900 dark:text-stone-100 max-h-[90vh] overflow-y-auto space-y-5`}
       >
         {children}
       </div>

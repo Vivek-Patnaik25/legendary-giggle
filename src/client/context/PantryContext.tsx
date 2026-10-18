@@ -141,7 +141,10 @@ export const PantryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               ...u,
               name: cleanText(u.name),
             })),
-            missingIngredients: (r.missingIngredients || []).map((m: any) => cleanText(m)),
+            missingIngredients: (r.missingIngredients || []).map((m: any) => ({
+              ...(typeof m === 'object' ? m : { name: m }),
+              name: cleanText(typeof m === 'object' ? m.name : m),
+            })),
           }));
           setRescueRecipes(cleanRecipes);
         }

@@ -319,6 +319,22 @@ The redesigned UI was tested and validated end-to-end via Playwright and Axe Cor
 | **Recipe Modal** | Ingredients checklist had discrepancies with the card due to naive substring matching. | **Verified Recipe Card:** Exact 100% parity with card via canonical engine matching; accessible checklist indicating which ingredients are in the fridge vs needed from grocery store; one-tap "Cook Dinner". |
 | **Weekly Report Card** | Generic dark modal without clear export or share mechanism. | **Shareable Kitchen Postcard:** Cozy kitchen aesthetic featuring Sir Expiry's dispatch, weekly rescue vs waste numbers, streak indicator, and native Web Share / clipboard copy for household sharing. |
 
+### 3.10 Design Review Fixes: Core Bugs (Group 1)
+
+1. **Recipe Needs Line `[object Object]` Elimination:**
+   - *Root Cause:* In `PantryContext.tsx`, `missingIngredients` objects (`{ name, quantity, unit }`) were mapped through `cleanText(m)`, converting the object directly to the string `"[object Object]"`. In `TodayView.tsx`, the card then rendered `Needs: [object Object]`.
+   - *Fix:* Enhanced `cleanText` in `src/client/utils/text.ts` to inspect objects and safely extract `.name` or `.title`. Updated `PantryContext.tsx` to preserve object structure (`{ ...m, name: cleanText(m.name || m) }`), and explicitly mapped ingredient names in `TodayView.tsx`.
+   - *Verification:* Added unit test `tests/client/text-rendering.test.ts` asserting that ingredient lists and recipe cards never produce `[object` or raw HTML entities (`&amp;`).
+2. **Recipe Modal Title Placement:**
+   - *Fix:* Updated `RecipeModal.tsx` to render the recipe title prominently as a bold serif heading with a close button right above the category and cooking metadata tags.
+3. **Dark Mode Activation & Theme Toggle Fix:**
+   - *Root Cause:* Tailwind CSS v4 defaults to `@media (prefers-color-scheme: dark)`. Furthermore, `<body class="bg-stone-50">` was hardcoded in `index.html` without dark background variants. Toggling the `.dark` class had no visual effect on the background.
+   - *Fix:* Added `@custom-variant dark (&:where(.dark, .dark *));` in `src/client/index.css`. Updated `index.html` with `bg-[#FAF7F2] dark:bg-[#0c0a09]`, and updated `App.tsx` to toggle `.dark` on both `document.documentElement` and `document.body`.
+   - *Verification:* Created Playwright test `scripts/test-theme-toggle.ts` that clicks the toggle button and asserts that `getComputedStyle(document.body).backgroundColor` changes from `rgb(250, 247, 242)` to `rgb(12, 10, 9)`, and restores on toggle.
+4. **True Transparent Mascot PNGs:**
+   - *Root Cause:* Mascot and badge image assets were JPEGs saved with a `.png` extension, resulting in opaque white background boxes that clipped on cream and dark modes.
+   - *Fix:* Developed `scripts/make-transparent.ts` using `sharp` to execute boundary flood-fill alpha masking on `sir_expiry_calm.png`, `sir_expiry_worried.png`, `sir_expiry_panicked.png`, `logo.png`, `badge_onion_survivor.png`, and `badge_freezer_archaeologist.png`, converting them to true 32-bit RGBA PNGs (colorType 6) with soft edge antialiasing.
+
 ---
 
 ## 4. Load Test Results & Known Gaps

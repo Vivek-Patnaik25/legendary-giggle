@@ -258,7 +258,7 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
                     {recipe.missingCount > 0 && (
                       <div className="flex items-center gap-1 text-stone-500">
                         <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                        <span>Needs: {recipe.missingIngredients?.map((m: any) => cleanText(m)).slice(0, 3).join(', ')}</span>
+                        <span>Needs: {recipe.missingIngredients?.map((m: any) => cleanText(typeof m === 'object' ? m?.name : m)).filter(Boolean).slice(0, 3).join(', ')}</span>
                       </div>
                     )}
                   </div>

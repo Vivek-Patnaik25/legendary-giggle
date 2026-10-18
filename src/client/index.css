@@ -1,24 +1,41 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --color-paper: #FAF7F2;
+  --color-tomato: #D9483B;
+  --color-apricot: #E07A5F;
+  --color-sage: #4A7C59;
 }
 
 @layer base {
   :root {
     color-scheme: light;
+    background-color: #FAF7F2;
+    color: #1C1917;
   }
 
-  :root.dark {
+  :root.dark, html.dark, body.dark {
     color-scheme: dark;
+    background-color: #0c0a09;
+    color: #EDE8E0;
   }
 
   body {
     margin: 0;
     font-family: var(--font-sans);
+    background-color: #FAF7F2;
+    color: #1C1917;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  html.dark body, body.dark {
+    background-color: #0c0a09;
+    color: #EDE8E0;
   }
 
   h1, h2, h3, .font-display {

@@ -78,6 +78,215 @@ async function auditAccessibility(page: any, viewName: string) {
   console.log(`  ✓ ${viewName}: 0 WCAG AA / contrast violations`);
 }
 
+async function verifyScrollBoundaryClearance(
+  page: any,
+  viewName: string,
+  viewportName: string,
+  vpWidth: number,
+  vpHeight: number
+) {
+  console.log(`\n  --- [${viewportName}] Boundary Clearance Check: ${viewName} ---`);
+
+  // PART A: TOP-OF-SCROLL CHECK
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(100);
+
+  const header = page.locator('header').first();
+  const headerBox = await header.boundingBox();
+  if (!headerBox) {
+    throw new Error(`Header not found on ${viewName} (${viewportName})`);
+  }
+  const headerBottom = headerBox.y + headerBox.height;
+
+  // Inspect all content elements in <main>
+  const topOverlapHits = await page.evaluate((hBottom: number) => {
+    const main = document.querySelector('main');
+    if (!main) return ['No <main> tag found'];
+
+    const hits: string[] = [];
+    const elements = Array.from(main.querySelectorAll('button, h1, h2, h3, p, section, input, select, [class*="rounded"]'));
+    for (const el of elements) {
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) continue;
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') continue;
+
+      if (rect.top < hBottom && rect.bottom > 0) {
+        const desc = el.tagName.toLowerCase() +
+          (el.className ? `.${el.className.split(' ').slice(0, 2).join('.')}` : '') +
+          (el.textContent ? ` ("${el.textContent.trim().slice(0, 30)}")` : '');
+        hits.push(`Element [${desc}] rect.top=${rect.top.toFixed(1)}px < headerBottom=${hBottom.toFixed(1)}px`);
+      }
+    }
+    return hits;
+  }, headerBottom);
+
+  if (topOverlapHits.length > 0) {
+    throw new Error(`Top-of-scroll overlap detected on ${viewName} (${viewportName}):\n${topOverlapHits.join('\n')}`);
+  }
+
+  const topMetrics = await page.evaluate((hBottom: number) => {
+    const main = document.querySelector('main');
+    if (!main) return null;
+    const elements = Array.from(main.querySelectorAll('section, h1, h2, div.flex, div.relative'));
+    let minTop = Infinity;
+    let minName = '';
+    for (const el of elements) {
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0 && r.top < minTop) {
+        minTop = r.top;
+        minName = el.tagName.toLowerCase() + (el.textContent ? ` ("${el.textContent.trim().slice(0, 25)}")` : '');
+      }
+    }
+    return { minTop, minName, clearance: minTop - hBottom };
+  }, headerBottom);
+
+  console.log(`  ✓ TOP-OF-SCROLL: Header [y:0, h:${headerBottom.toFixed(1)}px]. First content [${topMetrics?.minName}] top=${topMetrics?.minTop.toFixed(1)}px → CLEARANCE = ${topMetrics?.clearance.toFixed(1)}px above header (PASS)`);
+
+  // PART B: BOTTOM-OF-SCROLL CHECK
+  // Scroll to absolute bottom without centering!
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(150);
+
+  const nav = page.locator('nav[aria-label="Mobile navigation"]').first();
+  const navBox = await nav.boundingBox();
+  if (!navBox) {
+    throw new Error(`Mobile bottom nav not found on ${viewName} (${viewportName})`);
+  }
+
+  const addBtn = page.locator('nav[aria-label="Mobile navigation"] button[aria-label="Add item"]').first();
+  let navTopBound = navBox.y;
+  let addBoxStr = 'none';
+  if (await addBtn.isVisible()) {
+    const addBox = await addBtn.boundingBox();
+    if (addBox) {
+      navTopBound = Math.min(navTopBound, addBox.y);
+      addBoxStr = `[y:${addBox.y.toFixed(1)}, h:${addBox.height.toFixed(1)}]`;
+    }
+  }
+
+  const bottomAudit = await page.evaluate((navTop: number) => {
+    const main = document.querySelector('main');
+    if (!main) return { errors: ['No <main> tag found'], measured: [] };
+
+    const errors: string[] = [];
+    const measured: { name: string; type: 'button' | 'card' | 'text'; y: number; height: number; bottom: number; clearance: number; inViewport: boolean }[] = [];
+
+    // 1. All Use and Cook buttons
+    const buttons = Array.from(main.querySelectorAll('button')).filter(b => {
+      const t = (b.textContent || '').trim();
+      return t === 'Use' || t === 'Cook' || t.startsWith('Cook') || t.startsWith('Use');
+    });
+
+    for (const btn of buttons) {
+      const rect = btn.getBoundingClientRect();
+      const text = (btn.textContent || '').trim().replace(/\s+/g, ' ');
+      const clearance = navTop - rect.bottom;
+      const inViewport = rect.bottom > 0 && rect.top < window.innerHeight;
+
+      measured.push({
+        name: `Button "${text}"`,
+        type: 'button',
+        y: rect.top,
+        height: rect.height,
+        bottom: rect.bottom,
+        clearance,
+        inViewport,
+      });
+
+      if (rect.bottom > navTop && rect.top < window.innerHeight) {
+        errors.push(`Button "${text}" bottom=${rect.bottom.toFixed(1)}px overlaps bottom nav (navTop: ${navTop.toFixed(1)}px)! Negative clearance: ${clearance.toFixed(1)}px`);
+      }
+    }
+
+    // 2. Card edges
+    const cards = Array.from(main.querySelectorAll('section, div.border.rounded-xl, div.border.rounded-2xl, div[class*="rounded-xl"], div[class*="rounded-2xl"]')).filter(el => {
+      const r = el.getBoundingClientRect();
+      return r.width > 120 && r.height > 30 && el.parentElement?.tagName !== 'BUTTON';
+    });
+
+    for (const card of cards) {
+      const rect = card.getBoundingClientRect();
+      const title = card.querySelector('h2, h3, span.font-display, span.font-medium')?.textContent?.trim().slice(0, 30) || 'Card';
+      const clearance = navTop - rect.bottom;
+      const inViewport = rect.bottom > 0 && rect.top < window.innerHeight;
+
+      measured.push({
+        name: `Card "${title}"`,
+        type: 'card',
+        y: rect.top,
+        height: rect.height,
+        bottom: rect.bottom,
+        clearance,
+        inViewport,
+      });
+
+      if (rect.bottom > navTop && rect.top < window.innerHeight) {
+        errors.push(`Card "${title}" bottom=${rect.bottom.toFixed(1)}px overlaps bottom nav (navTop: ${navTop.toFixed(1)}px)! Negative clearance: ${clearance.toFixed(1)}px`);
+      }
+    }
+
+    // 3. Text blocks
+    const texts = Array.from(main.querySelectorAll('h1, h2, h3, p, span.text-xs, span.text-sm')).filter(el => {
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && el.textContent && el.textContent.trim().length > 3;
+    });
+
+    for (const tb of texts) {
+      const rect = tb.getBoundingClientRect();
+      const txt = (tb.textContent || '').trim().slice(0, 35);
+      const clearance = navTop - rect.bottom;
+      const inViewport = rect.bottom > 0 && rect.top < window.innerHeight;
+
+      measured.push({
+        name: `Text "${txt}"`,
+        type: 'text',
+        y: rect.top,
+        height: rect.height,
+        bottom: rect.bottom,
+        clearance,
+        inViewport,
+      });
+
+      if (rect.bottom > navTop && rect.top < window.innerHeight) {
+        errors.push(`Text "${txt}" bottom=${rect.bottom.toFixed(1)}px overlaps bottom nav (navTop: ${navTop.toFixed(1)}px)! Negative clearance: ${clearance.toFixed(1)}px`);
+      }
+    }
+
+    return { errors, measured };
+  }, navTopBound);
+
+  if (bottomAudit.errors.length > 0) {
+    throw new Error(`Bottom-of-scroll overlap detected on ${viewName} (${viewportName}):\n${bottomAudit.errors.join('\n')}`);
+  }
+
+  console.log(`  ✓ BOTTOM-OF-SCROLL: Nav top bound = ${navTopBound.toFixed(1)}px (nav: [y:${navBox.y.toFixed(1)}, h:${navBox.height.toFixed(1)}], center add: ${addBoxStr})`);
+
+  const buttonsInView = bottomAudit.measured.filter(m => m.type === 'button' && m.inViewport);
+  console.log(`    Buttons visible at end of scroll (${buttonsInView.length} visible):`);
+  for (const b of buttonsInView) {
+    console.log(`      - ${b.name}: y=${b.y.toFixed(1)}px, h=${b.height.toFixed(1)}px, bottom=${b.bottom.toFixed(1)}px → CLEARANCE = ${b.clearance.toFixed(1)}px (> 0)`);
+  }
+  const buttonsAbove = bottomAudit.measured.filter(m => m.type === 'button' && !m.inViewport && m.bottom <= 0);
+  if (buttonsAbove.length > 0) {
+    console.log(`      (${buttonsAbove.length} buttons safely scrolled above viewport, bottom <= 0px)`);
+  }
+
+  const cardsInView = bottomAudit.measured.filter(m => m.type === 'card' && m.bottom > 0);
+  if (cardsInView.length > 0) {
+    cardsInView.sort((a, b) => b.bottom - a.bottom);
+    const lowest = cardsInView[0];
+    console.log(`    Lowest Card edge: [${lowest.name}] bottom=${lowest.bottom.toFixed(1)}px → CLEARANCE = ${lowest.clearance.toFixed(1)}px (> 0)`);
+  }
+
+  const textsInView = bottomAudit.measured.filter(m => m.type === 'text' && m.bottom > 0);
+  if (textsInView.length > 0) {
+    textsInView.sort((a, b) => b.bottom - a.bottom);
+    const lowest = textsInView[0];
+    console.log(`    Lowest Text block: [${lowest.name}] bottom=${lowest.bottom.toFixed(1)}px → CLEARANCE = ${lowest.clearance.toFixed(1)}px (> 0)`);
+  }
+}
+
 async function verifyClearanceForPage(page: any, viewName: string, viewportName: string, vpWidth: number, vpHeight: number) {
   // Locate the Add button visible on this view/viewport
   const addBtn = page.locator('button[aria-label="Add item"], button[aria-label="Add item to fridge"]').filter({ visible: true }).first();
@@ -149,11 +358,11 @@ async function verifyClearanceForPage(page: any, viewName: string, viewportName:
 }
 
 async function main() {
-  console.log('=== Starting Pantry Rescue Acceptance Checks (v5) ===\n');
+  console.log('=== Starting Pantry Rescue Acceptance Checks (v6) ===\n');
 
-  const v5Dir = path.resolve(process.cwd(), 'docs/screens/v5');
-  const seqDir = path.join(v5Dir, 'first-run-sequence');
-  fs.mkdirSync(v5Dir, { recursive: true });
+  const v6Dir = path.resolve(process.cwd(), 'docs/screens/v6');
+  const seqDir = path.join(v6Dir, 'first-run-sequence');
+  fs.mkdirSync(v6Dir, { recursive: true });
   fs.mkdirSync(seqDir, { recursive: true });
 
   // 1. Initialize test database
@@ -171,8 +380,8 @@ async function main() {
     // ----------------------------------------------------
     // CHECK 1: Record 30-Second First-Run Flow Video (WebM)
     // ----------------------------------------------------
-    console.log('\n--- Running Check 1: Record First-Run Flow (docs/screens/v5/first-run.webm) ---');
-    const rawVideoDir = path.join(v5Dir, 'raw-video');
+    console.log('\n--- Running Check 1: Record First-Run Flow (docs/screens/v6/first-run.webm) ---');
+    const rawVideoDir = path.join(v6Dir, 'raw-video');
     fs.mkdirSync(rawVideoDir, { recursive: true });
 
     const recContext = await browser.newContext({
@@ -249,8 +458,8 @@ async function main() {
     await recPage.close();
     await recContext.close();
 
-    // Save video file to docs/screens/v5/first-run.webm directly
-    const destWebm = path.join(v5Dir, 'first-run.webm');
+    // Save video file to docs/screens/v6/first-run.webm directly
+    const destWebm = path.join(v6Dir, 'first-run.webm');
     if (videoObj) {
       const videoPath = await videoObj.path();
       if (fs.existsSync(videoPath)) {
@@ -316,13 +525,15 @@ async function main() {
     `).run(household.id);
 
     // ----------------------------------------------------
-    // CHECK 2: Full-Flow Screenshot Capture into docs/screens/v5/
+    // CHECK 2: Full-Flow Screenshot Capture into docs/screens/v6/
     // ----------------------------------------------------
-    console.log('\n--- Running Check 2: Screenshot Capture (docs/screens/v5/) ---');
+    console.log('\n--- Running Check 2: Screenshot Capture (docs/screens/v6/) ---');
 
     const viewports = [
       { name: 'desktop', width: 1280, height: 800 },
       { name: 'mobile', width: 375, height: 812 },
+      { name: 'mobile-320', width: 320, height: 568 },
+      { name: 'mobile-390', width: 390, height: 844 },
     ];
 
     const themes = ['light', 'dark'];
@@ -348,67 +559,72 @@ async function main() {
           }
         }
 
-        // 1. Capture Today View
-        await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-today.png`), fullPage: false });
-        console.log(`  ✓ Saved ${vp.name}-${theme}-today.png`);
+        const isMobile = vp.name.startsWith('mobile');
 
-        // 2. Capture Fridge View
-        if (vp.name === 'mobile') {
+        // 1. Capture Today View (fullPage on mobile so Cook tonight is visible!)
+        await page.screenshot({ path: path.join(v6Dir, `${vp.name}-${theme}-today.png`), fullPage: isMobile });
+        console.log(`  ✓ Saved ${vp.name}-${theme}-today.png (fullPage: ${isMobile})`);
+
+        // 2. Capture Fridge View (fullPage on mobile so all items are visible!)
+        if (isMobile) {
           await page.locator('nav[aria-label="Mobile navigation"] button:has-text("Fridge")').click();
         } else {
           await page.locator('header nav button:has-text("Fridge")').click();
         }
         await page.waitForSelector('text=Greek Yogurt', { timeout: 5000 });
-        await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-fridge.png`), fullPage: false });
-        console.log(`  ✓ Saved ${vp.name}-${theme}-fridge.png`);
+        await page.screenshot({ path: path.join(v6Dir, `${vp.name}-${theme}-fridge.png`), fullPage: isMobile });
+        console.log(`  ✓ Saved ${vp.name}-${theme}-fridge.png (fullPage: ${isMobile})`);
 
         // 3. Capture Wins View
-        if (vp.name === 'mobile') {
+        if (isMobile) {
           await page.locator('nav[aria-label="Mobile navigation"] button:has-text("Wins")').click();
         } else {
           await page.locator('header nav button:has-text("Wins")').click();
         }
         await page.waitForSelector('text=Achievements', { timeout: 5000 });
-        await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-wins.png`), fullPage: false });
+        await page.screenshot({ path: path.join(v6Dir, `${vp.name}-${theme}-wins.png`), fullPage: isMobile });
         console.log(`  ✓ Saved ${vp.name}-${theme}-wins.png`);
 
-        // 4. Capture Weekly Report Modal (from Wins view)
-        const reportBtn = page.locator('button:has-text("Weekly Report Card")');
-        if (await reportBtn.isVisible()) {
-          await reportBtn.click();
-          await page.waitForSelector('text=Sir Expiry\'s dispatch', { timeout: 5000 });
-          await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-modal-report.png`), fullPage: false });
-          console.log(`  ✓ Saved ${vp.name}-${theme}-modal-report.png`);
-          await page.keyboard.press('Escape');
-          await page.waitForTimeout(200);
-        }
+        // Only capture modals on desktop and primary mobile (375)
+        if (vp.name === 'desktop' || vp.name === 'mobile') {
+          // 4. Capture Weekly Report Modal (from Wins view)
+          const reportBtn = page.locator('button:has-text("Weekly Report Card")');
+          if (await reportBtn.isVisible()) {
+            await reportBtn.click();
+            await page.waitForSelector('text=Sir Expiry\'s dispatch', { timeout: 5000 });
+            await page.screenshot({ path: path.join(v6Dir, `${vp.name}-${theme}-modal-report.png`), fullPage: false });
+            console.log(`  ✓ Saved ${vp.name}-${theme}-modal-report.png`);
+            await page.keyboard.press('Escape');
+            await page.waitForTimeout(200);
+          }
 
-        // 5. Capture Add Item Modal
-        const openAdd = page.locator('button[aria-label="Add item to fridge"], button[aria-label="Add item"]').filter({ visible: true }).first();
-        if (await openAdd.isVisible()) {
-          await openAdd.click();
-          await page.waitForSelector('text=Quick Presets', { timeout: 5000 });
-          await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-modal-add.png`), fullPage: false });
-          console.log(`  ✓ Saved ${vp.name}-${theme}-modal-add.png`);
-          await page.keyboard.press('Escape');
-          await page.waitForTimeout(200);
-        }
+          // 5. Capture Add Item Modal
+          const openAdd = page.locator('button[aria-label="Add item to fridge"], button[aria-label="Add item"]').filter({ visible: true }).first();
+          if (await openAdd.isVisible()) {
+            await openAdd.click();
+            await page.waitForSelector('text=Quick Presets', { timeout: 5000 });
+            await page.screenshot({ path: path.join(v6Dir, `${vp.name}-${theme}-modal-add.png`), fullPage: false });
+            console.log(`  ✓ Saved ${vp.name}-${theme}-modal-add.png`);
+            await page.keyboard.press('Escape');
+            await page.waitForTimeout(200);
+          }
 
-        // 6. Capture Recipe Modal (go back to Today view)
-        if (vp.name === 'mobile') {
-          await page.locator('nav[aria-label="Mobile navigation"] button:has-text("Today")').click();
-        } else {
-          await page.locator('header nav button:has-text("Today")').click();
-        }
-        await page.waitForTimeout(300);
+          // 6. Capture Recipe Modal (go back to Today view)
+          if (isMobile) {
+            await page.locator('nav[aria-label="Mobile navigation"] button:has-text("Today")').click();
+          } else {
+            await page.locator('header nav button:has-text("Today")').click();
+          }
+          await page.waitForTimeout(300);
 
-        const recipeCard = page.locator('button:has-text("Cook")').first();
-        if (await recipeCard.isVisible()) {
-          await recipeCard.click();
-          await page.waitForSelector('text=Ingredients', { timeout: 5000 });
-          await page.screenshot({ path: path.join(v5Dir, `${vp.name}-${theme}-modal-recipe.png`), fullPage: false });
-          console.log(`  ✓ Saved ${vp.name}-${theme}-modal-recipe.png`);
-          await page.keyboard.press('Escape');
+          const recipeCard = page.locator('button:has-text("Cook")').first();
+          if (await recipeCard.isVisible()) {
+            await recipeCard.click();
+            await page.waitForSelector('text=Ingredients', { timeout: 5000 });
+            await page.screenshot({ path: path.join(v6Dir, `${vp.name}-${theme}-modal-recipe.png`), fullPage: false });
+            console.log(`  ✓ Saved ${vp.name}-${theme}-modal-recipe.png`);
+            await page.keyboard.press('Escape');
+          }
         }
 
         await ctx.close();
@@ -478,37 +694,50 @@ async function main() {
     console.log('\n✓ Comprehensive Accessibility & Contrast Audit passed (0 WCAG AA violations)');
 
     // ----------------------------------------------------
-    // CHECK 4: Strict Button Clearance (Today & Fridge at 375px and 1280px) & Keyboard Nav
+    // CHECK 4: Top & Bottom Scroll Boundary Clearance (320px, 375px, 390px) & Desktop Clearance
     // ----------------------------------------------------
-    console.log('\n--- Running Check 4: Strict Clearance Audit (Today & Fridge at 375px and 1280px) ---');
+    console.log('\n--- Running Check 4: Mobile Scroll Boundary Clearance (Today & Fridge at 320px, 375px, 390px) ---');
 
-    const clearanceViewports = [
-      { name: 'Mobile (375x812)', width: 375, height: 812 },
-      { name: 'Desktop (1280x800)', width: 1280, height: 800 },
+    const mobileBoundaryViewports = [
+      { name: 'Mobile-320 (320x568)', width: 320, height: 568 },
+      { name: 'Mobile-375 (375x812)', width: 375, height: 812 },
+      { name: 'Mobile-390 (390x844)', width: 390, height: 844 },
     ];
 
-    for (const vp of clearanceViewports) {
-      console.log(`\n  [Viewport: ${vp.name}]`);
+    for (const vp of mobileBoundaryViewports) {
+      console.log(`\n========================================================`);
+      console.log(`  AUDITING MOBILE BOUNDARY CLEARANCE: ${vp.name}`);
+      console.log(`========================================================`);
       const vpContext = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
       await vpContext.addCookies(sessionCookies);
       const vpPage = await vpContext.newPage();
 
-      // 1. Audit Today View
+      // 1. Audit Today View (Top & Bottom of Scroll)
       await vpPage.goto(baseUrl, { waitUntil: 'networkidle' });
       await vpPage.waitForSelector('text=Cook tonight');
-      await verifyClearanceForPage(vpPage, 'Today View', vp.name, vp.width, vp.height);
+      await verifyScrollBoundaryClearance(vpPage, 'Today View', vp.name, vp.width, vp.height);
 
-      // 2. Audit Fridge View
-      if (vp.width < 768) {
-        await vpPage.locator('nav[aria-label="Mobile navigation"] button:has-text("Fridge")').click();
-      } else {
-        await vpPage.locator('header nav button:has-text("Fridge")').click();
-      }
+      // 2. Audit Fridge View (Top & Bottom of Scroll)
+      await vpPage.locator('nav[aria-label="Mobile navigation"] button:has-text("Fridge")').click();
       await vpPage.waitForSelector('text=Greek Yogurt');
-      await verifyClearanceForPage(vpPage, 'Fridge View', vp.name, vp.width, vp.height);
+      await verifyScrollBoundaryClearance(vpPage, 'Fridge View', vp.name, vp.width, vp.height);
 
       await vpContext.close();
     }
+
+    // Desktop Clearance Audit (1280x800)
+    console.log('\n--- Running Desktop Clearance Audit (1280x800) ---');
+    const dtContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await dtContext.addCookies(sessionCookies);
+    const dtPage = await dtContext.newPage();
+    await dtPage.goto(baseUrl, { waitUntil: 'networkidle' });
+    await dtPage.waitForSelector('text=Cook tonight');
+    await verifyClearanceForPage(dtPage, 'Today View', 'Desktop (1280x800)', 1280, 800);
+
+    await dtPage.locator('header nav button:has-text("Fridge")').click();
+    await dtPage.waitForSelector('text=Greek Yogurt');
+    await verifyClearanceForPage(dtPage, 'Fridge View', 'Desktop (1280x800)', 1280, 800);
+    await dtContext.close();
 
     // 3. Desktop Keyboard Navigation
     console.log('\n  [Desktop Keyboard Navigation]');
@@ -539,7 +768,7 @@ async function main() {
       }
       console.log('  ✓ Modal closed via keyboard Escape');
     }
-    console.log('✓ Keyboard navigation & strict clearance passed');
+    console.log('✓ Keyboard navigation & boundary clearance passed');
     await kbContext.close();
 
     // ----------------------------------------------------
@@ -628,18 +857,18 @@ async function main() {
     // ----------------------------------------------------
     console.log('\n=== ALL ACCEPTANCE CHECKS PASSED SUCCESSFULLY ===\n');
 
-    console.log('--- Output File List (docs/screens/v5/): ---');
-    const files = fs.readdirSync(v5Dir).filter(f => !fs.statSync(path.join(v5Dir, f)).isDirectory());
+    console.log('--- Output File List (docs/screens/v6/): ---');
+    const files = fs.readdirSync(v6Dir).filter(f => !fs.statSync(path.join(v6Dir, f)).isDirectory());
     for (const file of files) {
-      const stats = fs.statSync(path.join(v5Dir, file));
-      console.log(`  - docs/screens/v5/${file} (${(stats.size / 1024).toFixed(1)} KB)`);
+      const stats = fs.statSync(path.join(v6Dir, file));
+      console.log(`  - docs/screens/v6/${file} (${(stats.size / 1024).toFixed(1)} KB)`);
     }
 
     const seqFiles = fs.readdirSync(seqDir);
-    console.log('\n--- First-Run Flow Sequence (docs/screens/v5/first-run-sequence/): ---');
+    console.log('\n--- First-Run Flow Sequence (docs/screens/v6/first-run-sequence/): ---');
     for (const sf of seqFiles) {
       const stats = fs.statSync(path.join(seqDir, sf));
-      console.log(`  - docs/screens/v5/first-run-sequence/${sf} (${(stats.size / 1024).toFixed(1)} KB)`);
+      console.log(`  - docs/screens/v6/first-run-sequence/${sf} (${(stats.size / 1024).toFixed(1)} KB)`);
     }
   } finally {
     await browser.close();

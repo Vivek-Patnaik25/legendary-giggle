@@ -616,6 +616,103 @@ Request #4:
   - Weekly Report Modal: `desktop-light-modal-report.png`, `desktop-dark-modal-report.png`, `mobile-light-modal-report.png`, `mobile-dark-modal-report.png`
 - Step-by-Step Sequence: 8 screenshots in `docs/screens/v5/first-run-sequence/01-cold-open.png` to `08-weekly-postcard.png`.
 
+---
+
+## 9. Mobile Scroll Boundary Clearance & Acceptance Suite (v6)
+
+### 9.1 Boundary Clearance Methodology & Padding Decision
+- **Container Bottom Padding Decision**:
+  - Configured `pb-36 sm:pb-24` across scroll containers in `TodayView.tsx` and `FridgeView.tsx`.
+  - **Exact Value**: `pb-36` = **144px** (9rem) on mobile viewports (< 640px) and `sm:pb-24` = **96px** (6rem) on desktop/tablet.
+  - **Rationale**:
+    The fixed mobile bottom navigation bar has height `h-16` (64px) with the centre Add action button positioned with `-mt-2`, reaching a maximum vertical boundary of 72px from the viewport base.
+    By enforcing `pb-36` (144px), the distance from the bottom of the lowest rendered card, text block, or action button to the absolute bottom of the document is guaranteed to be at least 144px.
+    When the page is scrolled to its absolute bottom (`window.scrollTo(0, document.body.scrollHeight)`), the lowest element sits at `viewportHeight - 144px`.
+    Because the bottom navigation bar top bound is at `viewportHeight - 72px`, the clearance gap is mathematically invariant across all viewport widths:
+    $$\text{Clearance} = (\text{viewportHeight} - 72\text{px}) - (\text{viewportHeight} - 144\text{px}) \approx 72\text{px} - 80\text{px} > 0$$
+    This eliminates collisions without needing to centre any button.
+
+### 9.2 Mobile Scroll Boundary Clearance Results (Measured Where User Sits at End of Scroll)
+
+#### 1. Narrow Mobile: 320px Width (`Mobile-320 (320x568)`)
+- **Top of Scroll (`window.scrollTo(0, 0)`)**:
+  - Header: `y = 0`, `h = 61.0px`.
+  - First content block: `y = 85.0px` (`section`).
+  - **Top Clearance**: **24.0px** margin strictly below header (0 overlaps).
+- **Bottom of Scroll (`window.scrollTo(0, document.body.scrollHeight)`)**:
+  - Bottom navigation bar top bound: `504.0px`.
+  - **Today View**:
+    - Visible Cook button #1: `y = 161.0px`, `h = 34.0px`, `bottom = 195.0px` → **Clearance = 309.0px** (> 0).
+    - Visible Cook button #2: `y = 373.0px`, `h = 34.0px`, `bottom = 407.0px` → **Clearance = 97.0px** (> 0).
+    - 4 buttons safely scrolled above viewport (`bottom <= 0px`).
+    - Lowest Card edge (`Cook tonight` card): `bottom = 424.0px` → **Clearance = 80.0px** (> 0).
+    - Lowest Text block (`Emergency Fridge-Clearing Frittata`): `bottom = 313.0px` → **Clearance = 191.0px** (> 0).
+  - **Fridge View**:
+    - Visible Use button #1: `y = 3.0px`, `h = 28.0px`, `bottom = 31.0px` → **Clearance = 473.0px** (> 0).
+    - Visible Use button #2: `y = 190.5px`, `h = 28.0px`, `bottom = 218.5px` → **Clearance = 285.5px** (> 0).
+    - Visible Use button #3: `y = 378.0px`, `h = 28.0px`, `bottom = 406.0px` → **Clearance = 98.0px** (> 0).
+    - 3 buttons safely scrolled above viewport (`bottom <= 0px`).
+    - Lowest Card edge: `bottom = 424.0px` → **Clearance = 80.0px** (> 0).
+    - Lowest Text block (`500 g`): `bottom = 212.5px` → **Clearance = 291.5px** (> 0).
+
+#### 2. Standard Mobile: 375px Width (`Mobile-375 (375x812)`)
+- **Top of Scroll (`window.scrollTo(0, 0)`)**:
+  - Header: `y = 0`, `h = 61.0px`.
+  - First content block: `y = 85.0px`.
+  - **Top Clearance**: **24.0px** margin strictly below header (0 overlaps).
+- **Bottom of Scroll (`window.scrollTo(0, document.body.scrollHeight)`)**:
+  - Bottom navigation bar top bound: `748.0px`.
+  - **Today View**:
+    - Visible Cook button #1: `y = 215.0px`, `h = 34.0px`, `bottom = 249.0px` → **Clearance = 499.0px** (> 0).
+    - Visible Cook button #2: `y = 427.0px`, `h = 34.0px`, `bottom = 461.0px` → **Clearance = 287.0px** (> 0).
+    - Visible Cook button #3: `y = 617.0px`, `h = 34.0px`, `bottom = 651.0px` → **Clearance = 97.0px** (> 0).
+    - 3 buttons safely scrolled above viewport (`bottom <= 0px`).
+    - Lowest Card edge (`Cook tonight` card): `bottom = 668.0px` → **Clearance = 80.0px** (> 0).
+    - Lowest Text block (`Emergency Fridge-Clearing Frittata`): `bottom = 557.0px` → **Clearance = 191.0px** (> 0).
+  - **Fridge View**:
+    - Visible Use button #1: `y = 59.5px`, `h = 28.0px`, `bottom = 87.5px` → **Clearance = 660.5px** (> 0).
+    - Visible Use button #2: `y = 247.0px`, `h = 28.0px`, `bottom = 275.0px` → **Clearance = 473.0px** (> 0).
+    - Visible Use button #3: `y = 434.5px`, `h = 28.0px`, `bottom = 462.5px` → **Clearance = 285.5px** (> 0).
+    - Visible Use button #4: `y = 622.0px`, `h = 28.0px`, `bottom = 650.0px` → **Clearance = 98.0px** (> 0).
+    - 2 buttons safely scrolled above viewport (`bottom <= 0px`).
+    - Lowest Card edge: `bottom = 668.0px` → **Clearance = 80.0px** (> 0).
+    - Lowest Text block (`500 g`): `bottom = 456.5px` → **Clearance = 291.5px** (> 0).
+
+#### 3. Large Mobile: 390px Width (`Mobile-390 (390x844)`)
+- **Top of Scroll (`window.scrollTo(0, 0)`)**:
+  - Header: `y = 0`, `h = 61.0px`.
+  - First content block: `y = 85.0px`.
+  - **Top Clearance**: **24.0px** margin strictly below header (0 overlaps).
+- **Bottom of Scroll (`window.scrollTo(0, document.body.scrollHeight)`)**:
+  - Bottom navigation bar top bound: `780.0px`.
+  - **Today View**:
+    - Visible Use button: `y = -1.0px`, `h = 32.0px`, `bottom = 31.0px` → **Clearance = 749.0px** (> 0).
+    - Visible Cook button #1: `y = 247.0px`, `h = 34.0px`, `bottom = 281.0px` → **Clearance = 499.0px** (> 0).
+    - Visible Cook button #2: `y = 459.0px`, `h = 34.0px`, `bottom = 493.0px` → **Clearance = 287.0px** (> 0).
+    - Visible Cook button #3: `y = 649.0px`, `h = 34.0px`, `bottom = 683.0px` → **Clearance = 97.0px** (> 0).
+    - 2 buttons safely scrolled above viewport (`bottom <= 0px`).
+    - Lowest Card edge (`Cook tonight` card): `bottom = 700.0px` → **Clearance = 80.0px** (> 0).
+    - Lowest Text block: `bottom = 589.0px` → **Clearance = 191.0px** (> 0).
+  - **Fridge View**:
+    - Visible Use button #1: `y = 91.5px`, `h = 28.0px`, `bottom = 119.5px` → **Clearance = 660.5px** (> 0).
+    - Visible Use button #2: `y = 279.0px`, `h = 28.0px`, `bottom = 307.0px` → **Clearance = 473.0px** (> 0).
+    - Visible Use button #3: `y = 466.5px`, `h = 28.0px`, `bottom = 494.5px` → **Clearance = 285.5px** (> 0).
+    - Visible Use button #4: `y = 654.0px`, `h = 28.0px`, `bottom = 682.0px` → **Clearance = 98.0px** (> 0).
+    - 2 buttons safely scrolled above viewport (`bottom <= 0px`).
+    - Lowest Card edge: `bottom = 700.0px` → **Clearance = 80.0px** (> 0).
+    - Lowest Text block (`500 g`): `bottom = 488.5px` → **Clearance = 291.5px** (> 0).
+
+### 9.3 Full-Page Screenshot Suite (`docs/screens/v6/`)
+- Mobile screenshots for Today and Fridge are generated with `fullPage: true`, rendering the full continuous page from the header through to the bottom "Cook tonight" recommendations and all fridge items.
+- Generated 36 total screenshots + 8 sequence images + 1 verified WebM video:
+  - Mobile Full-Page Today: `mobile-light-today.png`, `mobile-dark-today.png`, `mobile-320-light-today.png`, `mobile-320-dark-today.png`, `mobile-390-light-today.png`, `mobile-390-dark-today.png`
+  - Mobile Full-Page Fridge: `mobile-light-fridge.png`, `mobile-dark-fridge.png`, `mobile-320-light-fridge.png`, `mobile-320-dark-fridge.png`, `mobile-390-light-fridge.png`, `mobile-390-dark-fridge.png`
+  - Mobile Full-Page Wins: `mobile-light-wins.png`, `mobile-dark-wins.png`, `mobile-320-light-wins.png`, `mobile-320-dark-wins.png`, `mobile-390-light-wins.png`, `mobile-390-dark-wins.png`
+  - Desktop Views (1280x800): `desktop-light-today.png`, `desktop-dark-today.png`, `desktop-light-fridge.png`, `desktop-dark-fridge.png`, `desktop-light-wins.png`, `desktop-dark-wins.png`
+  - Modals (Desktop & Mobile): `desktop-light-modal-add.png`, `desktop-dark-modal-add.png`, `mobile-light-modal-add.png`, `mobile-dark-modal-add.png`, `desktop-light-modal-recipe.png`, `desktop-dark-modal-recipe.png`, `mobile-light-modal-recipe.png`, `mobile-dark-modal-recipe.png`, `desktop-light-modal-report.png`, `desktop-dark-modal-report.png`, `mobile-light-modal-report.png`, `mobile-dark-modal-report.png`
+  - Video Recording: `first-run.webm` (2,835.0 KB, 29.36s, verified with ffprobe as VP9 WebM)
+  - First-Run Sequence: 8 step screenshots in `docs/screens/v6/first-run-sequence/`
+
 
 
 

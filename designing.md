@@ -520,4 +520,14 @@ Request #4:
 - **Mascot Quote Legibility**: Confirmed quote text uses `text-stone-900 dark:text-stone-100` (`#1C1917` on light `#FAF7F2` and `#EDE8E0` on dark `#171412`), giving > 12:1 WCAG AAA contrast in both modes.
 - **Mobile Bottom Clearance**: Increased scroll container bottom padding to `pb-56 sm:pb-32` in `TodayView.tsx` and `FridgeView.tsx`, providing over 220px of scroll room so the floating Add button never covers a card's "Use" button on 375px mobile screens.
 
+### 7.2 Group 2: Recommendations Ranking & Expirations Priority
+- **Updated `recipeEngine.ts` Ranking Sort**:
+  1. Priority 1: Recipes with `pantryItemsUsedCount > 0` always sort above `pantryItemsUsedCount === 0`, ensuring "Uses 0 from your fridge" is never shown at the top when fridge items are available.
+  2. Priority 2: Recipes using urgent/expiring items (`urgentItemsUsedCount > 0`) rank first.
+  3. Priority 3: More urgent items used first.
+  4. Priority 4: Matching score descending, with tie-breaks by lowest missing ingredient count.
+- **Closest Match Notice in `TodayView.tsx`**: If expiring items exist in the household but no recipes directly match them, a clear banner is rendered: "No recipes directly use your expiring items (...). Showing the closest matches from your pantry staples:".
+- **Added Automated Test**: Added test in `tests/server/recipes.test.ts` verifying that when an item is cooked/used, recipes re-rank to prioritize the remaining expiring items, and "Uses 0 from your fridge" never tops the list.
+
+
 

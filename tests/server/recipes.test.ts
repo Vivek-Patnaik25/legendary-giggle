@@ -162,4 +162,77 @@ describe('Milestone 4: Barcode Lookup, Recipe Intelligence & Offline Fallbacks',
     expect(unclaimRes.statusCode).toBe(200);
     expect(JSON.parse(unclaimRes.payload).item.claimed_by_user_id).toBeNull();
   });
+
+  it('ranks cook suggestions by expiring items first, avoids "Uses 0 from your fridge" at the top, and updates after an item is used', async () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+    // Add expiring Greek Yogurt
+    const yogurtRes = await app.inject({
+      method: 'POST',
+      url: `/api/households/${householdId}/items`,
+      headers: { authorization: `Bearer ${userToken}` },
+      payload: { name: 'Greek Yogurt', category: 'dairy', quantity: 1, unit: 'piece', expiry_date: todayStr },
+    });
+    const yogurtId = JSON.parse(yogurtRes.payload).item.id;
+
+    // Add expiring Brown Onion
+    const onionRes = await app.inject({
+      method: 'POST',
+      url: `/api/households/${householdId}/items`,
+      headers: { authorization: `Bearer ${userToken}` },
+      payload: { name: 'Brown Onion', category: 'produce', quantity: 2, unit: 'piece', expiry_date: tomorrowStr },
+    });
+    const onionId = JSON.parse(onionRes.payload).item.id;
+
+    // Add non-expiring staple
+    await app.inject({
+      method: 'POST',
+      url: `/api/households/${householdId}/items`,
+      headers: { authorization: `Bearer ${userToken}` },
+      payload: { name: 'Penne Pasta', category: 'pantry_staple', quantity: 500, unit: 'g', expiry_date: '2027-01-01' },
+    });
+
+    // 1. Initial ranked recipes
+    const initialRes = await app.inject({
+      method: 'GET',
+      url: `/api/households/${householdId}/recipes/rescue`,
+      headers: { authorization: `Bearer ${userToken}` },
+    });
+    expect(initialRes.statusCode).toBe(200);
+    const initialRecipes = JSON.parse(initialRes.payload).recipes;
+    expect(initialRecipes.length).toBeGreaterThan(0);
+
+    // Never show "Uses 0 from your fridge" at top when items are available
+    expect(initialRecipes[0].pantryItemsUsedCount).toBeGreaterThan(0);
+    expect(initialRecipes[0].urgentItemsUsedCount).toBeGreaterThan(0);
+
+    // 2. Mark Greek Yogurt as used
+    const cookRes = await app.inject({
+      method: 'POST',
+      url: `/api/households/${householdId}/items/${yogurtId}/cook`,
+      headers: { authorization: `Bearer ${userToken}` },
+      payload: { quantity: 1 },
+    });
+    expect(cookRes.statusCode).toBe(200);
+
+    // 3. Fetch ranked recipes after Greek Yogurt is used
+    const afterCookRes = await app.inject({
+      method: 'GET',
+      url: `/api/households/${householdId}/recipes/rescue`,
+      headers: { authorization: `Bearer ${userToken}` },
+    });
+    expect(afterCookRes.statusCode).toBe(200);
+    const updatedRecipes = JSON.parse(afterCookRes.payload).recipes;
+    expect(updatedRecipes.length).toBeGreaterThan(0);
+
+    // Top suggestion must never be "Uses 0" and must use remaining expiring item (Brown Onion)
+    const topSuggestion = updatedRecipes[0];
+    expect(topSuggestion.pantryItemsUsedCount).toBeGreaterThan(0);
+    expect(topSuggestion.urgentItemsUsedCount).toBeGreaterThanOrEqual(1);
+
+    const usedNames = topSuggestion.usedPantryItems.map((p: any) => p.name.toLowerCase());
+    expect(usedNames).toContain('brown onion');
+    expect(usedNames).not.toContain('greek yogurt');
+  });
 });

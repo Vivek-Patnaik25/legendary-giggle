@@ -225,6 +225,15 @@ export const TodayView: React.FC<TodayViewProps> = ({ onOpenAddItem, onCookRecip
           </span>
         </div>
 
+        {expiringSoon.length > 0 && !rescueRecipes.some(r => r.urgentItemsUsedCount > 0) && rescueRecipes.length > 0 && (
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3.5 text-xs text-amber-900 dark:text-amber-200 flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              No recipes directly use your expiring items ({expiringSoon.map(i => cleanText(i.name)).join(', ')}). Showing the closest matches from your pantry staples:
+            </span>
+          </div>
+        )}
+
         {rescueRecipes.length === 0 ? (
           <div className="bg-stone-50 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 rounded-xl p-6 text-center text-xs text-stone-600 dark:text-stone-400">
             Add staple items like eggs, onions, or tomatoes to unlock rescue recipes.

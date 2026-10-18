@@ -211,8 +211,35 @@ export async function rankRescueRecipes(
     };
   });
 
-  // Sort by matching score descending
-  ranked.sort((a, b) => b.matchingScore - a.matchingScore);
+  // Sort priority:
+  // 1. Has pantry items: recipes using >= 1 fridge item ALWAYS rank above "Uses 0 from your fridge"
+  // 2. Has expiring/urgent items: recipes using expiring items rank first
+  // 3. More expiring items used first
+  // 4. Overall matching score descending (includes urgentScoreSum, items used bonus, missing penalty)
+  // 5. Tie-break: fewer missing ingredients
+  ranked.sort((a, b) => {
+    const aHasPantry = a.pantryItemsUsedCount > 0 ? 1 : 0;
+    const bHasPantry = b.pantryItemsUsedCount > 0 ? 1 : 0;
+    if (aHasPantry !== bHasPantry) {
+      return bHasPantry - aHasPantry; // Never show "Uses 0 from your fridge" at top if recipes use items
+    }
+
+    const aHasUrgent = a.urgentItemsUsedCount > 0 ? 1 : 0;
+    const bHasUrgent = b.urgentItemsUsedCount > 0 ? 1 : 0;
+    if (aHasUrgent !== bHasUrgent) {
+      return bHasUrgent - aHasUrgent; // Rank by expiring items first
+    }
+
+    if (b.urgentItemsUsedCount !== a.urgentItemsUsedCount) {
+      return b.urgentItemsUsedCount - a.urgentItemsUsedCount;
+    }
+
+    if (b.matchingScore !== a.matchingScore) {
+      return b.matchingScore - a.matchingScore;
+    }
+
+    return a.missingCount - b.missingCount;
+  });
 
   if (options.limit && options.limit > 0) {
     return ranked.slice(0, options.limit);

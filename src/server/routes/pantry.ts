@@ -131,13 +131,13 @@ export async function pantryRoutes(fastify: FastifyInstance): Promise<void> {
       location = 'fridge',
       quantity = 1,
       unit = 'piece',
-      expiryDate,
       notes = '',
       barcode = null,
-      isLeftover = false,
-      isFrozen = false,
-      claimedByUserId = null,
     } = body;
+    const expiryDate = body.expiryDate || body.expiry_date;
+    const isLeftover = Boolean(body.isLeftover ?? body.is_leftover ?? false);
+    const isFrozen = Boolean(body.isFrozen ?? body.is_frozen ?? false);
+    const claimedByUserId = body.claimedByUserId || body.claimed_by_user_id || null;
 
     if (!name || String(name).trim().length === 0) {
       return reply.status(400).send({ error: 'VALIDATION_ERROR', message: 'Item name is required' });
